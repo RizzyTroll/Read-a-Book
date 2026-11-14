@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-serif: 'Lora', Georgia, 'New York', serif;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --bg-canvas: #F5F5F7;
+    --surface-card: #FFFFFF;
+    --text-primary: #1D1D1F;
+    --text-muted: #6E6E73;
+    --accent-blue: #007AFF;
+    --accent-green: #248A3D;
+    --border-hairline: rgba(0, 0, 0, 0.08);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+.font-editorial {
+  font-family: var(--font-serif);
+}
+
+.font-mono-code {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Subtle Apple-style scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.16);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.28);
+}
+
+/* Crisp Apple Books 3D Cover Shadow & Spine */
+.book-cover-shadow {
+  box-shadow:
+    0 14px 28px -8px rgba(0, 0, 0, 0.22),
+    0 6px 12px -4px rgba(0, 0, 0, 0.1),
+    inset -1px 0 2px rgba(0, 0, 0, 0.12),
+    inset 1.5px 0 2px rgba(255, 255, 255, 0.28);
+}
+
+.book-spine-effect {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.28) 0%,
+    rgba(0, 0, 0, 0.16) 4%,
+    rgba(255, 255, 255, 0.12) 8%,
+    transparent 16%
+  );
+}
