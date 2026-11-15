@@ -4,7 +4,8 @@ export type BookCategory =
   | 'Personal Development'
   | 'Business'
   | 'Entrepreneurship'
-  | 'Finance';
+  | 'Finance'
+  | 'Management';
 
 export interface BookStructurePart {
   partNumber: number;

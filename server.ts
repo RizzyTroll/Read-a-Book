@@ -21,6 +21,7 @@ const VALID_CATEGORIES = [
   'Business',
   'Entrepreneurship',
   'Finance',
+  'Management',
 ];
 
 const ai = new GoogleGenAI({
@@ -232,11 +233,10 @@ Return ONLY a single valid JSON object with this exact structure:
 
   try {
     const geminiResponse = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
+      model: 'gemini-4-hydrogen',
       contents: userPrompt,
       config: {
         systemInstruction: systemPrompt,
-        temperature: 0.3,
         tools: [{ googleSearch: {} }],
       },
     });
@@ -796,7 +796,7 @@ app.post('/api/auto-add-books', async (req, res) => {
         
         try {
           const aiPickResponse = await ai.models.generateContent({
-            model: 'gemini-3.8-flash',
+            model: 'gemini-4-hydrogen',
             contents: pickPrompt,
             config: { responseMimeType: 'application/json' },
           });
@@ -845,50 +845,156 @@ app.post('/api/auto-add-books', async (req, res) => {
   }
 });
 
-// POST /api/ask-lab - Deep inquiry on book frameworks
+// Helper to generate an accurate, question-aware fallback answer directly from a book's structured content
+function buildGroundedBookFallbackAnswer(book: any, question: string): string {
+  const q = question.toLowerCase();
+  const lines: string[] = [];
+
+  const isAskingDaily =
+    /apply|daily|practice|habit|action|use|start|today|work|home|life|step|plan/.test(q);
+  const isAskingExample = /example|story|scenario|real|illustrat/.test(q);
+  const isAskingWeakness =
+    /weak|flaw|criticism|limit|wrong|bad|miss|disagree|short|problem|mistake/.test(q);
+  const isAskingMainIdea = /main|thesis|summary|gist|point|about|overview|beginner|explain/.test(q);
+
+  // Match parts whose title or explanation overlaps with words from the user's question
+  const keywords = q
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter((w) => w.length > 3 && !['what', 'does', 'this', 'book', 'about', 'from', 'with', 'that', 'your', 'mean', 'explain'].includes(w));
+
+  const structure = Array.isArray(book.structure) ? book.structure : [];
+  const scoredParts = structure
+    .map((part: any) => {
+      const hay = `${part.partTitle || ''} ${part.keyIdea || ''} ${part.realLifeExample || ''} ${part.whyItMatters || ''}`.toLowerCase();
+      let score = 0;
+      for (const kw of keywords) {
+        if (hay.includes(kw)) score += 1;
+      }
+      return { part, score };
+    })
+    .filter((item: any) => item.score > 0)
+    .sort((a: any, b: any) => b.score - a.score);
+
+  if (scoredParts.length > 0) {
+    lines.push(`From "${book.title}" by ${book.author}:`);
+    scoredParts.slice(0, 2).forEach(({ part }: any) => {
+      lines.push(`\n• ${part.partTitle}: ${part.keyIdea}`);
+      if (part.realLifeExample) {
+        lines.push(`  Example: ${part.realLifeExample}`);
+      }
+      if (part.whyItMatters) {
+        lines.push(`  Why it matters: ${part.whyItMatters}`);
+      }
+    });
+  } else if (isAskingDaily && Array.isArray(book.dailyImplementation) && book.dailyImplementation.length > 0) {
+    lines.push(`How to apply "${book.title}" in daily life:`);
+    book.dailyImplementation.slice(0, 4).forEach((step: string) => {
+      lines.push(`• ${step}`);
+    });
+  } else if (isAskingWeakness && book.strengthWeakness) {
+    lines.push(`Strengths & limits of "${book.title}":\n${book.strengthWeakness}`);
+  } else if (isAskingExample) {
+    const withExamples = structure.filter((p: any) => p.realLifeExample);
+    if (withExamples.length > 0) {
+      lines.push(`Real-life examples from "${book.title}":`);
+      withExamples.slice(0, 2).forEach((p: any) => {
+        lines.push(`• ${p.partTitle}: ${p.realLifeExample}`);
+      });
+    }
+  } else {
+    lines.push(`Main idea of "${book.title}" (${book.author}):\n${book.thesis}`);
+    if (Array.isArray(book.keyInsights) && book.keyInsights.length > 0) {
+      lines.push(`\nKey takeaways:`);
+      book.keyInsights.slice(0, isAskingMainIdea ? 4 : 3).forEach((insight: string) => {
+        lines.push(`• ${insight}`);
+      });
+    }
+  }
+
+  if (
+    lines.length > 0 &&
+    !isAskingDaily &&
+    Array.isArray(book.dailyImplementation) &&
+    book.dailyImplementation.length > 0
+  ) {
+    lines.push(`\nPractical step to try today:\n• ${book.dailyImplementation[0]}`);
+  }
+
+  return lines.join('\n').trim();
+}
+
+// POST /api/ask-lab - Accurate, book-grounded Q&A
 app.post('/api/ask-lab', async (req, res) => {
   try {
-    const { bookId, question } = req.body;
-    if (!question) {
-      return res.status(400).json({ error: 'Please provide a question.' });
+    const { bookId, bookContext, question } = req.body;
+    const cleanQuestion = typeof question === 'string' ? question.trim() : '';
+    if (!cleanQuestion) {
+      return res.status(400).json({ error: 'Please enter a question.' });
     }
 
     const library = readLibrary();
-    let context = '';
+    const matchedBook =
+      (bookId && library.find((b: any) => b.id === bookId)) ||
+      (bookContext?.title &&
+        library.find(
+          (b: any) => b.title.toLowerCase() === String(bookContext.title).toLowerCase()
+        )) ||
+      bookContext ||
+      null;
 
-    if (bookId) {
-      const book = library.find((b: any) => b.id === bookId);
-      if (book) {
-        context = `Context: You are answering a deep-dive question specifically about the book "${book.title}" by ${book.author}.
-Thesis: ${book.thesis}
-Structure: ${JSON.stringify(book.structure)}
-Key Insights: ${JSON.stringify(book.keyInsights)}
-Where Strong/Weak: ${book.strengthWeakness}`;
-      }
+    let context = '';
+    if (matchedBook) {
+      context = `Book: "${matchedBook.title}" by ${matchedBook.author || 'the author'}
+Main Idea: ${matchedBook.thesis || ''}
+Chapters / Parts: ${JSON.stringify(matchedBook.structure || [])}
+Key Takeaways: ${JSON.stringify(matchedBook.keyInsights || [])}
+Daily Life Application: ${JSON.stringify(matchedBook.dailyImplementation || [])}
+Strengths & Limits: ${matchedBook.strengthWeakness || ''}`;
     } else {
-      context = `Context: You have access to the Daily Book Lab library containing: ${library
-        .map((b: any) => `"${b.title}" by ${b.author} (${b.category})`)
+      context = `Library titles: ${library
+        .map((b: any) => `"${b.title}" by ${b.author}`)
         .join(', ')}.`;
     }
 
     const prompt = `${context}
 
-User question: "${question}"
+Reader's question: "${cleanQuestion}"
 
-Provide a direct, intellectually rigorous, and zero-fluff answer grounded strictly in the book's verified frameworks. If the question asks for comparison or application, give a concrete, clear breakdown with zero boilerplate or throat-clearing.`;
+Answer the reader's question accurately, clearly, and directly using plain everyday language. Ground your answer in the actual ideas, frameworks, and examples of the book (verify facts accurately; never invent quotes or chapters that aren't in the book). Give concrete, actionable clarity without filler.`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: prompt,
-      config: {
-        systemInstruction: 'You are the analytical intelligence behind Daily Book Lab. Speak with direct clarity, precision, and zero motivational filler.',
-      },
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-4-hydrogen',
+        contents: prompt,
+        config: {
+          systemInstruction:
+            'You are a knowledgeable, accurate reading companion for Read a Book. Give clear, truthful, plain-English answers grounded strictly in the book. Keep responses concise, structured, and directly helpful.',
+          tools: [{ googleSearch: {} }],
+        },
+      });
+
+      const answerText = response.text?.trim();
+      if (answerText) {
+        return res.json({ answer: answerText });
+      }
+    } catch (aiErr: any) {
+      console.warn('Ask-lab Gemini fallback triggered:', aiErr?.message || aiErr);
+    }
+
+    // Fallback to grounded structured answer if Gemini fails or quota is exhausted
+    if (matchedBook) {
+      return res.json({
+        answer: buildGroundedBookFallbackAnswer(matchedBook, cleanQuestion),
+      });
+    }
+
+    return res.status(503).json({
+      error: 'Unable to answer right now. Please try again in a moment.',
     });
-
-    res.json({ answer: response.text });
   } catch (err: any) {
     console.error('Error in ask-lab:', err);
-    res.status(500).json({ error: err.message || 'Failed to answer inquiry.' });
+    return res.status(500).json({ error: err.message || 'Failed to answer question.' });
   }
 });
 
@@ -900,8 +1006,8 @@ app.post('/api/tts', async (req, res) => {
       return res.status(400).json({ error: 'Text is required for TTS.' });
     }
 
-    const cleanText = text.slice(0, 1000); // Keep focused for concise audio brief
-    const script = `Here is today's Daily Book Lab brief on ${title || 'the selected book'}. ${cleanText}`;
+    const cleanText = text.slice(0, 1000);
+    const script = `Here is a Read a Book brief on ${title || 'the selected book'}. ${cleanText}`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-3.8-flash-lite-tts',
@@ -949,7 +1055,7 @@ async function startServer() {
     });
   } else {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { middlewareMode: true, hmr: false },
       appType: 'spa',
     });
     app.use(vite.middlewares);
@@ -957,7 +1063,7 @@ async function startServer() {
 
   const PORT = 3000;
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Daily Book Lab server running on http://0.0.0.0:${PORT}`);
+    console.log(`Read a Book server running on http://0.0.0.0:${PORT}`);
   });
 }
 

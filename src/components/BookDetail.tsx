@@ -163,10 +163,11 @@ export const BookDetail: React.FC<BookDetailProps> = ({
     }
   };
 
-  const handleAskLab = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!labQuestion.trim() || isAskingLab) return;
+  const submitQuestion = async (questionText: string) => {
+    const trimmed = questionText.trim();
+    if (!trimmed || isAskingLab) return;
 
+    setLabQuestion(trimmed);
     setIsAskingLab(true);
     setLabAnswer(null);
 
@@ -176,16 +177,45 @@ export const BookDetail: React.FC<BookDetailProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           bookId: book.id,
-          question: labQuestion,
+          bookContext: {
+            title: book.title,
+            author: book.author,
+            thesis: book.thesis,
+            structure: book.structure,
+            keyInsights: book.keyInsights,
+            dailyImplementation: dailyImplementationList,
+            strengthWeakness: book.strengthWeakness,
+          },
+          question: trimmed,
         }),
       });
+      if (!res.ok) {
+        throw new Error('API unavailable');
+      }
       const data = await res.json();
       setLabAnswer(data.answer || 'No response returned.');
-    } catch (err: any) {
-      setLabAnswer(`Could not get answer: ${err.message || 'Please check connection.'}`);
+    } catch {
+      const qWords = trimmed.toLowerCase().split(/\s+/).filter((w) => w.length > 2);
+      const scoredParts = book.structure.map((p) => {
+        const hay = `${p.partTitle} ${p.keyIdea} ${p.realLifeExample || ''} ${p.whyItMatters}`.toLowerCase();
+        const hits = qWords.filter((w) => hay.includes(w)).length;
+        return { p, hits };
+      });
+      scoredParts.sort((a, b) => b.hits - a.hits);
+      const bestPart = scoredParts[0]?.hits > 0 ? scoredParts[0].p : book.structure[0];
+      const dailyTip = dailyImplementationList[0] || book.keyInsights[0] || '';
+      const fallbackText = bestPart
+        ? `From "${book.title}" (${bestPart.partTitle}): ${bestPart.keyIdea}${bestPart.realLifeExample ? ` For example: ${bestPart.realLifeExample}` : ''} Try today: ${dailyTip}`
+        : `${book.thesis} ${dailyTip}`;
+      setLabAnswer(fallbackText);
     } finally {
       setIsAskingLab(false);
     }
+  };
+
+  const handleAskLab = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await submitQuestion(labQuestion);
   };
 
   const togglePart = (num: number) => {
@@ -674,19 +704,45 @@ export const BookDetail: React.FC<BookDetailProps> = ({
         </button>
 
         {showAsk && (
-          <div className={`px-5 pb-5 pt-3 border-t space-y-3 ${theme.border}`}>
+          <div className={`px-5 pb-5 pt-3 border-t space-y-3.5 ${theme.border}`}>
+            {/* Quick-tap starter questions */}
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                `What is the main lesson in simple words?`,
+                `How do I apply this in daily life?`,
+                `Give a real-life example from this book.`,
+                `What are its weak spots?`,
+              ].map((promptText) => (
+                <button
+                  key={promptText}
+                  type="button"
+                  disabled={isAskingLab}
+                  onClick={() => submitQuestion(promptText)}
+                  className={`px-3 py-1.5 rounded-xl border text-[12px] font-medium transition-colors cursor-pointer disabled:opacity-50 ${theme.subtleBg} ${theme.hoverBg} ${theme.border} ${theme.textSecondary}`}
+                >
+                  {promptText}
+                </button>
+              ))}
+            </div>
+
             <form onSubmit={handleAskLab} className="space-y-2.5">
               <textarea
                 value={labQuestion}
                 onChange={(e) => setLabQuestion(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    submitQuestion(labQuestion);
+                  }
+                }}
                 placeholder={`Ask anything about ${book.title}...`}
                 rows={2}
-                className={`w-full border rounded-xl p-3 text-xs sm:text-sm focus:outline-none transition-colors ${theme.subtleBg} ${theme.border} ${theme.textPrimary}`}
+                className={`w-full border rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#007AFF]/25 focus:border-[#007AFF] transition-all ${theme.subtleBg} ${theme.border} ${theme.textPrimary}`}
               />
               <button
                 type="submit"
                 disabled={isAskingLab || !labQuestion.trim()}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#007AFF] hover:bg-[#0066D6] disabled:opacity-50 text-white font-semibold text-xs cursor-pointer transition-all"
+                className="min-h-[40px] flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#007AFF] hover:bg-[#0066D6] disabled:opacity-50 text-white font-semibold text-xs sm:text-[13px] cursor-pointer transition-all"
               >
                 {isAskingLab ? (
                   <>
@@ -703,7 +759,7 @@ export const BookDetail: React.FC<BookDetailProps> = ({
             </form>
 
             {labAnswer && (
-              <div className={`p-4 rounded-xl border ${theme.subtleBg} ${theme.border}`}>
+              <div className={`p-4 rounded-2xl border ${theme.subtleBg} ${theme.border}`}>
                 <div className={`${bodyTextClass} whitespace-pre-wrap ${theme.textPrimary}`}>
                   {labAnswer}
                 </div>

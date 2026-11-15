@@ -1,0 +1,300 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Default-Deny Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Reusable Global Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidUsernameId(username) {
+      return username is string && username.size() >= 3 && username.size() <= 24 && username.matches('^[a-z0-9_]+$');
+    }
+
+    function isValidCategory(category) {
+      return category is string &&
+        category.size() >= 1 &&
+        category.size() <= 64 &&
+        category in [
+          'Self-Growth',
+          'Investing',
+          'Personal Development',
+          'Business',
+          'Entrepreneurship',
+          'Finance',
+          'Management'
+        ];
+    }
+
+    // 3. Entity Validation Blueprints
+    function isValidUsernameClaim(data, username) {
+      return data.keys().hasAll(['uid', 'username', 'createdAt']) &&
+        data.keys().hasOnly(['uid', 'username', 'createdAt']) &&
+        data.uid is string &&
+        isValidId(data.uid) &&
+        data.uid == request.auth.uid &&
+        data.username is string &&
+        data.username == username &&
+        isValidUsernameId(data.username) &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidUserPrivateProfile(data, userId) {
+      return data.keys().hasAll(['uid', 'username', 'email', 'tutorialCompleted', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'username', 'email', 'tutorialCompleted', 'createdAt', 'updatedAt']) &&
+        data.uid is string &&
+        isValidId(data.uid) &&
+        data.uid == userId &&
+        data.uid == request.auth.uid &&
+        data.username is string &&
+        isValidUsernameId(data.username) &&
+        data.email is string &&
+        data.email.size() >= 3 &&
+        data.email.size() <= 254 &&
+        data.tutorialCompleted is bool &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidUserBook(data, userId, bookId) {
+      return data.keys().hasAll([
+          'uid',
+          'bookId',
+          'day',
+          'date',
+          'title',
+          'subtitle',
+          'author',
+          'category',
+          'year',
+          'readingTimeMin',
+          'qualificationRationale',
+          'thesis',
+          'conflictNote',
+          'sourcesChecked',
+          'structure',
+          'keyInsights',
+          'dailyImplementation',
+          'strengthWeakness',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'uid',
+          'bookId',
+          'day',
+          'date',
+          'title',
+          'subtitle',
+          'author',
+          'category',
+          'year',
+          'readingTimeMin',
+          'qualificationRationale',
+          'thesis',
+          'conflictNote',
+          'sourcesChecked',
+          'structure',
+          'keyInsights',
+          'dailyImplementation',
+          'strengthWeakness',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.uid is string &&
+        isValidId(data.uid) &&
+        data.uid == userId &&
+        data.uid == request.auth.uid &&
+        data.bookId is string &&
+        isValidId(data.bookId) &&
+        data.bookId == bookId &&
+        data.day is number &&
+        data.day >= 1 &&
+        data.day <= 5000 &&
+        data.date is string &&
+        data.date.size() >= 1 &&
+        data.date.size() <= 32 &&
+        data.title is string &&
+        data.title.size() >= 1 &&
+        data.title.size() <= 300 &&
+        data.subtitle is string &&
+        data.subtitle.size() <= 300 &&
+        data.author is string &&
+        data.author.size() >= 1 &&
+        data.author.size() <= 200 &&
+        data.category is string &&
+        isValidCategory(data.category) &&
+        data.year is number &&
+        data.year >= 1400 &&
+        data.year <= 2100 &&
+        data.readingTimeMin is number &&
+        data.readingTimeMin >= 1 &&
+        data.readingTimeMin <= 120 &&
+        data.qualificationRationale is string &&
+        data.qualificationRationale.size() >= 1 &&
+        data.qualificationRationale.size() <= 1500 &&
+        data.thesis is string &&
+        data.thesis.size() >= 1 &&
+        data.thesis.size() <= 1500 &&
+        data.conflictNote is string &&
+        data.conflictNote.size() <= 1500 &&
+        data.sourcesChecked is list &&
+        data.sourcesChecked.size() <= 10 &&
+        (data.sourcesChecked.size() == 0 || data.sourcesChecked[0] is string) &&
+        data.structure is list &&
+        data.structure.size() >= 1 &&
+        data.structure.size() <= 20 &&
+        data.structure[0] is map &&
+        data.keyInsights is list &&
+        data.keyInsights.size() >= 1 &&
+        data.keyInsights.size() <= 20 &&
+        data.keyInsights[0] is string &&
+        data.dailyImplementation is list &&
+        data.dailyImplementation.size() <= 20 &&
+        (data.dailyImplementation.size() == 0 || data.dailyImplementation[0] is string) &&
+        data.strengthWeakness is string &&
+        data.strengthWeakness.size() <= 2000 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidReadProgress(data, userId, bookId) {
+      return data.keys().hasAll(['uid', 'bookId', 'read', 'readAt', 'category', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'bookId', 'read', 'readAt', 'category', 'updatedAt']) &&
+        data.uid is string &&
+        isValidId(data.uid) &&
+        data.uid == userId &&
+        data.uid == request.auth.uid &&
+        data.bookId is string &&
+        isValidId(data.bookId) &&
+        data.bookId == bookId &&
+        data.read is bool &&
+        data.readAt is string &&
+        data.readAt.size() <= 64 &&
+        data.category is string &&
+        isValidCategory(data.category) &&
+        data.updatedAt is timestamp;
+    }
+
+    // 4. Collection Rules
+
+    // Unique Username Reservation (Zero PII; get only; write-once via atomic transaction)
+    match /usernames/{username} {
+      allow get: if isValidUsernameId(username);
+      allow list: if false;
+      allow create: if isSignedIn() &&
+        isValidUsernameId(username) &&
+        isValidUsernameClaim(incoming(), username) &&
+        incoming().createdAt == request.time &&
+        !exists(/databases/$(database)/documents/usernames/$(username)) &&
+        existsAfter(/databases/$(database)/documents/users/$(request.auth.uid)/private/profile);
+      allow update, delete: if false;
+    }
+
+    // Owner-Only Private Account Profile (PII Isolation)
+    match /users/{userId}/private/{docId} {
+      allow get: if isSignedIn() && request.auth.uid == userId && docId == 'profile';
+      allow list: if isSignedIn() && request.auth.uid == userId && existing().uid == request.auth.uid;
+      allow create: if isSignedIn() &&
+        request.auth.uid == userId &&
+        docId == 'profile' &&
+        isValidUserPrivateProfile(incoming(), userId) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        existsAfter(/databases/$(database)/documents/usernames/$(incoming().username));
+      allow update: if isSignedIn() &&
+        request.auth.uid == userId &&
+        docId == 'profile' &&
+        isValidUserPrivateProfile(incoming(), userId) &&
+        incoming().uid == existing().uid &&
+        incoming().username == existing().username &&
+        incoming().email == existing().email &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['tutorialCompleted', 'updatedAt']);
+      allow delete: if false;
+    }
+
+    // Owner-Only Synced Library Books
+    match /users/{userId}/books/{bookId} {
+      allow get: if isSignedIn() && request.auth.uid == userId && isValidId(bookId);
+      allow list: if isSignedIn() && request.auth.uid == userId && existing().uid == request.auth.uid;
+      allow create: if isSignedIn() &&
+        request.auth.uid == userId &&
+        isValidId(bookId) &&
+        isValidUserBook(incoming(), userId, bookId) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isSignedIn() &&
+        request.auth.uid == userId &&
+        isValidId(bookId) &&
+        isValidUserBook(incoming(), userId, bookId) &&
+        incoming().uid == existing().uid &&
+        incoming().bookId == existing().bookId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'day',
+          'date',
+          'title',
+          'subtitle',
+          'author',
+          'category',
+          'year',
+          'readingTimeMin',
+          'qualificationRationale',
+          'thesis',
+          'conflictNote',
+          'sourcesChecked',
+          'structure',
+          'keyInsights',
+          'dailyImplementation',
+          'strengthWeakness',
+          'updatedAt'
+        ]);
+      allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(bookId);
+    }
+
+    // Owner-Only Reading Completion Progress
+    match /users/{userId}/readProgress/{bookId} {
+      allow get: if isSignedIn() && request.auth.uid == userId && isValidId(bookId);
+      allow list: if isSignedIn() && request.auth.uid == userId && existing().uid == request.auth.uid;
+      allow create: if isSignedIn() &&
+        request.auth.uid == userId &&
+        isValidId(bookId) &&
+        isValidReadProgress(incoming(), userId, bookId) &&
+        incoming().updatedAt == request.time;
+      allow update: if isSignedIn() &&
+        request.auth.uid == userId &&
+        isValidId(bookId) &&
+        isValidReadProgress(incoming(), userId, bookId) &&
+        incoming().uid == existing().uid &&
+        incoming().bookId == existing().bookId &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'read',
+          'readAt',
+          'category',
+          'updatedAt'
+        ]);
+      allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(bookId);
+    }
+  }
+}

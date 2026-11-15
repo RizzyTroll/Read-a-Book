@@ -1,0 +1,250 @@
+{
+  "entities": {
+    "UsernameClaim": {
+      "title": "UsernameClaim",
+      "description": "Unique username reservation document (non-PII) ensuring no two accounts can claim the same username.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the user who owns this username."
+        },
+        "username": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 24,
+          "pattern": "^[a-z0-9_]+$",
+          "description": "Normalized lowercase unique username."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when username was claimed."
+        }
+      },
+      "required": ["uid", "username", "createdAt"]
+    },
+    "UserPrivateProfile": {
+      "title": "UserPrivateProfile",
+      "description": "Private user profile isolated from public collections to protect PII (email).",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "username": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 24,
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "minLength": 3,
+          "maxLength": 254
+        },
+        "tutorialCompleted": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "username", "email", "tutorialCompleted", "createdAt", "updatedAt"]
+    },
+    "UserLibraryBook": {
+      "title": "UserLibraryBook",
+      "description": "Book summary stored inside a user's personal synced library.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "bookId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "day": {
+          "type": "number"
+        },
+        "date": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 300
+        },
+        "author": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "Self-Growth",
+            "Investing",
+            "Personal Development",
+            "Business",
+            "Entrepreneurship",
+            "Finance",
+            "Management"
+          ]
+        },
+        "year": {
+          "type": "number"
+        },
+        "readingTimeMin": {
+          "type": "number"
+        },
+        "qualificationRationale": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1500
+        },
+        "thesis": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1500
+        },
+        "conflictNote": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 1500
+        },
+        "sourcesChecked": {
+          "type": "array"
+        },
+        "structure": {
+          "type": "array"
+        },
+        "keyInsights": {
+          "type": "array"
+        },
+        "dailyImplementation": {
+          "type": "array"
+        },
+        "strengthWeakness": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 2000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "uid",
+        "bookId",
+        "day",
+        "date",
+        "title",
+        "subtitle",
+        "author",
+        "category",
+        "year",
+        "readingTimeMin",
+        "qualificationRationale",
+        "thesis",
+        "conflictNote",
+        "sourcesChecked",
+        "structure",
+        "keyInsights",
+        "dailyImplementation",
+        "strengthWeakness",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "UserReadStatus": {
+      "title": "UserReadStatus",
+      "description": "Completion state and timestamp for a book read by the user.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "bookId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "read": {
+          "type": "boolean"
+        },
+        "readAt": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 64
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "Self-Growth",
+            "Investing",
+            "Personal Development",
+            "Business",
+            "Entrepreneurship",
+            "Finance",
+            "Management"
+          ]
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "bookId", "read", "readAt", "category", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/usernames/{username}": {
+      "schema": { "$ref": "#/entities/UsernameClaim" },
+      "description": "Publicly checkable (single-doc get only, list forbidden) unique username lock with zero PII."
+    },
+    "/users/{userId}/private/{docId}": {
+      "schema": { "$ref": "#/entities/UserPrivateProfile" },
+      "description": "Owner-only private account profile storing email and tutorial status."
+    },
+    "/users/{userId}/books/{bookId}": {
+      "schema": { "$ref": "#/entities/UserLibraryBook" },
+      "description": "Owner-only personal library books seeded with 20 starter books plus custom added titles."
+    },
+    "/users/{userId}/readProgress/{bookId}": {
+      "schema": { "$ref": "#/entities/UserReadStatus" },
+      "description": "Owner-only reading completion records used to plot the daily Growth chart."
+    }
+  }
+}

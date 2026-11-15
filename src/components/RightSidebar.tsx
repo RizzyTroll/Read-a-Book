@@ -8,10 +8,15 @@ import {
   Download,
   ChevronRight,
   BookOpen,
+  User as UserIcon,
+  LogOut,
+  HelpCircle,
 } from 'lucide-react';
 import { Book } from '../types';
 import { ReadStatusMap } from '../utils/readingStorage';
 import { exportLibraryJson } from '../utils/libraryStorage';
+import { PWAInstallButton } from './PWAInstallButton';
+import { UserProfileData } from '../utils/firestoreSync';
 
 export type LibraryFilter = 'all' | 'unread' | 'completed';
 
@@ -26,6 +31,12 @@ interface RightSidebarProps {
   onFilterChange: (filter: LibraryFilter) => void;
   onAutoAddBooks: (count: number, specificTitle?: string) => Promise<void>;
   isAddingBooks: boolean;
+  userProfile: UserProfileData | null;
+  signedInEmail?: string | null;
+  isAuthReady: boolean;
+  onOpenAuth: (mode: 'signup' | 'login' | 'claim') => void;
+  onLogOut: () => void;
+  onOpenTutorial: () => void;
 }
 
 export const RightSidebar: React.FC<RightSidebarProps> = ({
@@ -39,6 +50,12 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   onFilterChange,
   onAutoAddBooks,
   isAddingBooks,
+  userProfile,
+  signedInEmail,
+  isAuthReady,
+  onOpenAuth,
+  onLogOut,
+  onOpenTutorial,
 }) => {
   const [bookCountToAdd, setBookCountToAdd] = useState<number>(1);
   const [showSpecificInput, setShowSpecificInput] = useState(false);
@@ -84,6 +101,146 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
 
       {/* Scrollable Apple Grouped Lists */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-6">
+        {/* 0. Account Card (Username + Gmail + Password — No Google) */}
+        <section className="space-y-2">
+          <h3 className="px-1 text-[13px] font-semibold text-[#6E6E73]">
+            Account
+          </h3>
+          <div className="bg-white rounded-2xl border border-black/[0.05] p-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+            {!isAuthReady ? (
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-2 text-[12px] text-[#6E6E73]">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#007AFF]" />
+                  <span>Checking account...</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onOpenAuth('signup')}
+                    className="h-10 rounded-xl bg-[#007AFF] hover:bg-[#0066D6] text-white text-[13px] font-semibold cursor-pointer transition-colors"
+                  >
+                    Sign Up
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onOpenAuth('login')}
+                    className="h-10 rounded-xl bg-[#F2F2F7] hover:bg-[#E5E5EA] text-[#1D1D1F] text-[13px] font-semibold cursor-pointer transition-colors"
+                  >
+                    Sign In
+                  </button>
+                </div>
+              </div>
+            ) : userProfile ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-9 h-9 rounded-full bg-[#007AFF]/12 text-[#007AFF] flex items-center justify-center shrink-0">
+                      <UserIcon className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[14px] font-semibold text-[#1D1D1F] truncate">
+                        @{userProfile.username}
+                      </p>
+                      <p className="text-[12px] text-[#248A3D] truncate">
+                        Cloud sync active
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onLogOut}
+                    className="px-3 py-1.5 rounded-xl bg-[#F2F2F7] hover:bg-[#E5E5EA] text-[#1D1D1F] text-[12px] font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer transition-colors"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Log Out</span>
+                  </button>
+                </div>
+                <div className="pt-2.5 border-t border-black/[0.06] flex items-center justify-between text-[12px]">
+                  <button
+                    type="button"
+                    onClick={() => onOpenAuth('login')}
+                    className="font-medium text-[#007AFF] hover:underline cursor-pointer"
+                  >
+                    Sign In another account
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onOpenAuth('signup')}
+                    className="font-medium text-[#6E6E73] hover:text-[#1D1D1F] hover:underline cursor-pointer"
+                  >
+                    New Sign Up
+                  </button>
+                </div>
+              </div>
+            ) : signedInEmail ? (
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-semibold text-[#1D1D1F] truncate">
+                      {signedInEmail}
+                    </p>
+                    <p className="text-[11px] text-[#B25000]">
+                      Pick a unique @username to finish setup
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onLogOut}
+                    className="px-2.5 py-1.5 rounded-xl bg-[#F2F2F7] hover:bg-[#E5E5EA] text-[#1D1D1F] text-[12px] font-semibold shrink-0 cursor-pointer transition-colors"
+                  >
+                    Log Out
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onOpenAuth('claim')}
+                  className="w-full h-9 rounded-xl bg-[#007AFF] hover:bg-[#0066D6] text-white text-[13px] font-semibold cursor-pointer transition-colors"
+                >
+                  Pick @username
+                </button>
+                <div className="pt-2 border-t border-black/[0.06] flex items-center justify-between text-[12px]">
+                  <button
+                    type="button"
+                    onClick={() => onOpenAuth('login')}
+                    className="font-medium text-[#007AFF] hover:underline cursor-pointer"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onOpenAuth('signup')}
+                    className="font-medium text-[#6E6E73] hover:text-[#1D1D1F] hover:underline cursor-pointer"
+                  >
+                    Sign Up
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                <p className="text-[13px] text-[#6E6E73] leading-snug">
+                  Create an account with a unique username, Gmail, and password to save your progress everywhere.
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onOpenAuth('signup')}
+                    className="h-10 rounded-xl bg-[#007AFF] hover:bg-[#0066D6] text-white text-[13px] font-semibold cursor-pointer transition-colors"
+                  >
+                    Sign Up
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onOpenAuth('login')}
+                    className="h-10 rounded-xl bg-[#F2F2F7] hover:bg-[#E5E5EA] text-[#1D1D1F] text-[13px] font-semibold cursor-pointer transition-colors"
+                  >
+                    Sign In
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
         {/* 1. Search */}
         <section className="space-y-2">
           <div className="relative">
@@ -277,12 +434,26 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
           </div>
         </section>
 
-        {/* 5. Library Tools */}
+        {/* 5. Library Tools (Phone QR, Quick Tutorial, Export) */}
         <section className="space-y-2">
           <h3 className="px-1 text-[13px] font-semibold text-[#6E6E73]">
             Library
           </h3>
           <div className="bg-white rounded-2xl border border-black/[0.05] divide-y divide-black/[0.06] overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+            <PWAInstallButton />
+
+            <button
+              type="button"
+              onClick={onOpenTutorial}
+              className="w-full px-4 min-h-[46px] flex items-center justify-between text-[14px] font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors cursor-pointer"
+            >
+              <span className="flex items-center gap-2.5">
+                <HelpCircle className="w-4 h-4 text-[#007AFF]" />
+                <span>Quick Tutorial</span>
+              </span>
+              <span className="text-[12px] text-[#86868B]">Guide</span>
+            </button>
+
             <button
               type="button"
               onClick={() => exportLibraryJson(books)}

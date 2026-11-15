@@ -1,0 +1,1407 @@
+[
+  {
+    "id": "psychology-of-money",
+    "day": 1,
+    "date": "2026-10-19",
+    "title": "The Psychology of Money",
+    "subtitle": "Timeless lessons on wealth, greed, and happiness",
+    "author": "Morgan Housel",
+    "category": "Finance",
+    "year": 2020,
+    "readingTimeMin": 9,
+    "qualificationRationale": "Loved by everyday readers and top investors alike because it shows that doing well with money is mostly about calm habits and emotions, not being a math genius.",
+    "thesis": "Being good with money has very little to do with how smart you are at math and almost everything to do with how calmly and patiently you behave.",
+    "conflictNote": "Experts widely agree with the book's focus on behavior; a few math-focused investors argue you can earn slightly higher returns by taking bigger risks, though Housel points out peace of mind matters more.",
+    "sourcesChecked": [
+      "Harriman House Book Overview",
+      "Morgan Housel Essays & Behavioral Finance Notes",
+      "Wall Street Journal & Collab Fund Reviews"
+    ],
+    "structure": [
+      {
+        "partNumber": 1,
+        "partTitle": "No One's Crazy & Understanding Luck and Risk",
+        "keyIdea": "Every person handles money differently because they grew up in different times and saw different things happen. Someone who lived through a job crisis or high inflation will save cash fearfully, while someone who grew up in a boom will invest boldly. Also, luck and risk are twins: not every rich person earned 100% of their success through hard work alone, and not every failure happened because someone was lazy.",
+        "realLifeExample": "Two friends graduate in different years: one graduates during a booming economy and easily gets a high-paying job, while the other graduates during a recession and struggles for years despite working just as hard.",
+        "whyItMatters": "Understanding this stops you from judging how others spend or save, and keeps you humble during good times and kinder to yourself when things go wrong."
+      },
+      {
+        "partNumber": 2,
+        "partTitle": "Knowing When You Have 'Enough' & The Magic of Compounding",
+        "keyIdea": "Compounding means your money earns money, and then that new money earns even more money over time—like a snowball rolling downhill. Warren Buffett became one of the richest people in history not because he earned the highest return every single year, but because he started investing as a kid and never stopped for over 75 years. On the flip side, if you keep raising your finish line and chasing more out of greed, you can risk everything you already have.",
+        "realLifeExample": "If you put away $300 a month starting at age 25, you end up with far more money at age 65 than someone who saves $600 a month starting at age 45, simply because time did the heavy lifting.",
+        "whyItMatters": "Time and patience beat trying to get rich fast, and deciding what 'enough' looks like protects you from foolish gambles."
+      },
+      {
+        "partNumber": 3,
+        "partTitle": "Getting Wealthy vs. Staying Wealthy",
+        "keyIdea": "Getting rich and staying rich require completely opposite habits. Getting rich takes optimism, boldness, and taking chances. Staying rich takes humility, caution, living below your means, and always preparing for surprises so a bad year cannot wipe you out. Also, most big wins come from just a few lucky breaks or smart choices while most small tries fail—and that is completely normal.",
+        "realLifeExample": "A store owner might try 10 new products where 8 flop, 1 breaks even, and 1 bestseller pays for the whole store and turns a huge profit.",
+        "whyItMatters": "You do not need to be right every single time to build lasting wealth; you just have to avoid disasters that force you to quit."
+      },
+      {
+        "partNumber": 4,
+        "partTitle": "True Freedom & The Man in the Car Paradox",
+        "keyIdea": "The greatest thing money can buy is control over your own time—waking up and choosing what you want to do, with whom, and for how long. Meanwhile, buying flashy cars, watches, or designer clothes to impress people rarely works. When people see someone driving an expensive sports car, they almost never think 'Wow, that driver is cool'; they think 'I wish I owned that car.'",
+        "realLifeExample": "Keeping $20,000 in savings instead of spending it on a flashy car upgrade means you can safely leave a toxic job without panicking about next month's rent.",
+        "whyItMatters": "Real wealth is hidden—it is the money sitting quietly in savings and investments that buys your daily freedom, not the stuff you show off."
+      },
+      {
+        "partNumber": 5,
+        "partTitle": "Be Reasonable Rather Than Coldly Rational & Leave Room for Error",
+        "keyIdea": "A math spreadsheet might tell you to put 100% of your money into stocks and keep zero cash. That is 'rational' on paper, but in real life, if the market crashes 30% and you lose sleep, you might panic and sell at the worst time. A 'reasonable' plan leaves extra cash on the side—called a margin of safety—so unexpected job loss, medical bills, or market drops never force you to sell.",
+        "realLifeExample": "Keeping 6 months of living expenses in a boring savings account earns less interest than stocks, but it lets you sleep peacefully and stay invested during a market crash.",
+        "whyItMatters": "A pretty good plan you can calmly stick with for 20 years always beats a 'perfect' plan you quit when life gets scary."
+      },
+      {
+        "partNumber": 6,
+        "partTitle": "You Will Change Over Time & Why Bad News Sounds Smarter",
+        "keyIdea": "We are terrible at predicting what our future selves will want—what feels exciting at age 22 often feels exhausting at age 42, so avoid locking yourself into rigid extremes. Also, scary predictions about the economy always sound smarter and get more clicks than hopeful ones, even though economies and human ingenuity slowly keep moving forward over decades.",
+        "realLifeExample": "If you avoid extreme debt or overly rigid 30-year commitments in your twenties, you stay free to change careers or move cities later when your family priorities shift.",
+        "whyItMatters": "Staying flexible protects your happiness as you grow older, and tuning out daily doom-and-gloom news keeps you from making fearful money mistakes."
+      }
+    ],
+    "keyInsights": [
+      "Spending money to show people how much money you have is the fastest way to end up with less money.",
+      "True wealth is invisible: it is the money you saved and did not spend, sitting quietly to buy your future freedom.",
+      "Having control over your daily schedule brings far more happiness than earning a huge salary with zero free time.",
+      "Never risk money you truly need just to chase extra money you do not really need.",
+      "Keep an emergency cash cushion so surprises like car repairs or market drops never force you to sell investments at a loss.",
+      "Good investing is not about making the highest return once—it is about earning decent returns steadily for decades without quitting."
+    ],
+    "dailyImplementation": [
+      "Wait 48 hours before buying anything non-essential so you know whether you truly want it or just want to impress others.",
+      "Set up an automatic bank transfer on payday so a fixed amount moves straight into savings or investments before you can spend it.",
+      "Keep 3 to 6 months of basic living costs in an easy-to-reach savings account so surprises never push you into credit card debt.",
+      "Write down on one piece of paper what 'enough' money and possessions looks like for your life so you stop endlessly comparing yourself to richer people.",
+      "Stop checking investment prices every day; check them once a month or once a quarter so scary news headlines do not tempt you to panic.",
+      "When someone spends money differently from you, remind yourself they have different life experiences rather than calling them foolish."
+    ],
+    "strengthWeakness": "Where it is strong: Explains money emotions using crystal-clear everyday stories instead of confusing finance math. Where it is weak: It does not give a step-by-step guide on which exact index funds, taxes, or accounts to pick—it teaches the mindset first."
+  },
+  {
+    "id": "atomic-habits",
+    "day": 2,
+    "date": "2026-10-20",
+    "title": "Atomic Habits",
+    "subtitle": "An Easy & Proven Way to Build Good Habits & Break Bad Ones",
+    "author": "James Clear",
+    "category": "Personal Development",
+    "year": 2018,
+    "readingTimeMin": 9,
+    "qualificationRationale": "Over 15 million copies sold worldwide because it turns psychology research into simple, practical steps anyone can use immediately to build better habits.",
+    "thesis": "Big life changes do not happen from one burst of willpower; they come from tiny 1% improvements done every day that slowly reshape who you believe you are.",
+    "conflictNote": "Psychologists broadly agree with these four laws of habits; Clear builds on proven behavioral science while making identity change easy to practice.",
+    "sourcesChecked": [
+      "James Clear Habit Research Notes",
+      "Stanford Habit Lab Reviews",
+      "Behavioral Psychology Summaries"
+    ],
+    "structure": [
+      {
+        "partNumber": 1,
+        "partTitle": "Why Tiny Changes Add Up & Identity-Based Habits",
+        "keyIdea": "Getting just 1% better every day makes you 37 times better by the end of a year, while getting 1% worse every day quietly ruins you. Most people fail because they focus only on outcomes ('I want to lose 20 pounds') instead of their identity ('I am a healthy person'). Every tiny action you take is like casting a vote for the kind of person you want to be.",
+        "realLifeExample": "If you go for a short 10-minute walk even when it is raining, you cast a vote for the identity 'I am someone who does not skip workouts.'",
+        "whyItMatters": "Once a habit becomes part of who you are, you no longer have to fight yourself to do it—it feels natural."
+      },
+      {
+        "partNumber": 2,
+        "partTitle": "Rule 1: Make Good Habits Obvious (and Bad Ones Invisible)",
+        "keyIdea": "Your brain reacts to what it sees first, not what you plan in your head. To build a good habit, put clear visual reminders right in front of you and connect the new habit to something you already do every day (this is called 'Habit Stacking': 'After I brush my teeth, I will do 5 push-ups'). To break a bad habit, hide the trigger completely out of sight.",
+        "realLifeExample": "Leave a book on your pillow in the morning if you want to read at night, and put the TV remote or junk food on a high shelf inside a cabinet.",
+        "whyItMatters": "Changing the room around you works much better than trying to force yourself with willpower when you are tired."
+      },
+      {
+        "partNumber": 3,
+        "partTitle": "Rule 2: Make Good Habits Attractive",
+        "keyIdea": "We repeat things that feel rewarding or make us fit in with people we respect. You can make boring tasks enjoyable by pairing them with something you already love—called 'Temptation Bundling.' Also, spending time with friends or groups who already have the habit you want makes that habit feel normal and easy.",
+        "realLifeExample": "Only let yourself listen to your favorite exciting podcast or audiobook while you are walking on the treadmill or folding laundry.",
+        "whyItMatters": "When a good habit feels enjoyable and normal among your friends, you stop procrastinating."
+      },
+      {
+        "partNumber": 4,
+        "partTitle": "Rule 3: Make Good Habits Easy (The Two-Minute Rule)",
+        "keyIdea": "People naturally choose whatever takes the least effort. When starting a new habit, shrink it down so it takes less than two minutes—because the hardest part is simply starting. Make good choices take fewer steps and make bad habits take extra annoying steps so laziness works in your favor.",
+        "realLifeExample": "Instead of setting a goal to 'read 30 pages a day,' start with 'read one page every night before sleep.' Instead of 'run 5 miles,' just put on your running shoes and step outside.",
+        "whyItMatters": "A habit must exist before you can improve it; starting tiny removes the fear and excuses that keep you stuck."
+      },
+      {
+        "partNumber": 5,
+        "partTitle": "Rule 4: Make Good Habits Satisfying Right Away",
+        "keyIdea": "Our brains love rewards that happen right now and ignore benefits that take months to appear. That is why eating a donut feels great today while eating a salad feels boring until months later. Give yourself a tiny instant win after doing a good habit, like checking off a calendar box so you can see your streak grow.",
+        "realLifeExample": "Every time you finish a workout or skip takeout food, move $5 into a special 'fun travel jar' or draw a bright X on a wall calendar so your brain feels rewarded today.",
+        "whyItMatters": "Seeing visible progress right away keeps your motivation alive long enough for real results to show up."
+      },
+      {
+        "partNumber": 6,
+        "partTitle": "Never Miss Twice & Handling Boredom",
+        "keyIdea": "Everyone slips up on busy or sick days. The secret rule that separates successful people from quitters is 'Never Miss Twice': missing one day is an accident, but missing two days in a row starts a new habit of quitting. Also, the real test of mastery is sticking to your routine even on boring days when there is no excitement.",
+        "realLifeExample": "If you miss your workout on Tuesday because of work, do even a tiny 5-minute stretch on Wednesday so the streak of showing up stays unbroken.",
+        "whyItMatters": "Perfection is impossible, so learning how to bounce back fast after one missed day guarantees long-term success."
+      }
+    ],
+    "keyInsights": [
+      "You do not rise to the level of your big goals; you fall to the level of your daily routines.",
+      "Every tiny action casts a vote for the person you want to become.",
+      "Change what you see in your house and on your desk—your surroundings control your habits far more than willpower.",
+      "Use the Two-Minute Rule: make any new habit so easy that you can finish the starting version in under two minutes.",
+      "Never miss twice in a row: if you slip up today, get back on track tomorrow even if you only do a tiny version.",
+      "Pair things you should do with things you enjoy so good habits feel like a treat instead of a chore."
+    ],
+    "dailyImplementation": [
+      "Write one Habit Stacking sentence for tomorrow morning: 'After I [pour my coffee], I will [write my top 1 task for the day].'",
+      "Shrink any habit you keep putting off down to a Two-Minute version today—read just 2 pages, stretch for 2 minutes, or save just $2.",
+      "Clean up your environment tonight: lay out your workout clothes or book in plain sight, and log out of distracting apps on your phone.",
+      "Put a simple calendar or habit tracker on your desk or wall and draw an X every day you show up so you do not break the chain.",
+      "Apply the 'Never Miss Twice' rule: whenever you miss a habit once, schedule a super-short 5-minute version for the very next day.",
+      "Bundle a boring chore with a fun reward—only listen to your favorite music or show while cleaning, cooking, or exercising."
+    ],
+    "strengthWeakness": "Where it is strong: Probably the clearest, easiest-to-follow guide on daily habits ever written, packed with practical examples. Where it is weak: It focuses on steady daily habits, so it will not tell you what big career or life direction you should pick in the first place."
+  },
+  {
+    "id": "zero-to-one",
+    "day": 3,
+    "date": "2026-10-21",
+    "title": "Zero to One",
+    "subtitle": "Notes on Startups, or How to Build the Future",
+    "author": "Peter Thiel with Blake Masters",
+    "category": "Entrepreneurship",
+    "year": 2014,
+    "readingTimeMin": 9,
+    "qualificationRationale": "Taught at Stanford and read by startup founders worldwide for challenging common business clichés about competition and innovation.",
+    "thesis": "True progress means creating something genuinely new (going from 0 to 1) instead of copying what already exists (going from 1 to n), and lasting companies win by escaping competition rather than fighting price wars.",
+    "conflictNote": "Traditional business teachers favor healthy competition among many firms, while Thiel argues fierce competition wipes out profits and keeps companies from investing in big breakthroughs.",
+    "sourcesChecked": [
+      "Stanford CS183 Startup Lecture Notes",
+      "Founders Fund & Venture Strategy Reviews",
+      "Harvard Business Review & Financial Times Critiques"
+    ],
+    "structure": [
+      {
+        "partNumber": 1,
+        "partTitle": "Creating Something New (0 to 1) vs. Copying (1 to n)",
+        "keyIdea": "There are two ways to grow: copying something that already works and spreading it to more places (going from 1 to n, like opening another burger shop), or inventing something genuinely better that did not exist before (going from 0 to 1). Thiel asks one sharp question to test your thinking: 'What important truth do very few people agree with you on?' Real breakthroughs come from spotting truths the crowd has missed.",
+        "realLifeExample": "Opening the 50th coffee shop on the same street is going from 1 to n; building an affordable tool that lets local cafes accept instant mobile pre-orders before others existed was going from 0 to 1.",
+        "whyItMatters": "Pushes you to ask how you can bring real new value instead of entering a crowded copycat race."
+      },
+      {
+        "partNumber": 2,
+        "partTitle": "Why Competition Destroys Profits (Creative Monopolies)",
+        "keyIdea": "In school and sports, we are taught to compete head-to-head. In business, head-to-head competition is a trap: when ten companies sell the exact same product, they slash prices until nobody makes any money and everyone feels stressed. Instead, aim to become a 'creative monopoly'—meaning you are so uniquely good at solving one specific problem that no rival offers a close substitute.",
+        "realLifeExample": "Airlines compete fiercely on the exact same routes and barely make profit per ticket, whereas Google Search dominated search quality so thoroughly that advertisers had to come to them.",
+        "whyItMatters": "Saves you from exhausting price wars and gives a business the breathing room to treat workers well and plan for the future."
+      },
+      {
+        "partNumber": 3,
+        "partTitle": "How to Build a Lasting Advantage: Start Small & Expand",
+        "keyIdea": "Never try to capture 1% of a giant $100 billion market on day one—you will get crushed by big rivals and invisible to customers. Instead, pick a tiny, clear market where you can quickly win 80% of customers, then expand step by step into nearby markets. Strong advantages come from technology that is 10 times better, network effects (useful because other people use it), economies of scale, and a trusted brand.",
+        "realLifeExample": "Amazon started strictly selling books online (easy to ship, huge selection) before expanding to electronics, household goods, and cloud computing; Facebook started only for Harvard students.",
+        "whyItMatters": "Winning a small niche builds real cash flow, loyal fans, and confidence before taking on bigger arenas."
+      },
+      {
+        "partNumber": 4,
+        "partTitle": "The Power Law & Uncovering Hidden Secrets",
+        "keyIdea": "In life, investing, and business, results are never evenly spread out—one or two big decisions or projects end up producing more value than everything else combined (this is called the Power Law). Great businesses are also built on 'secrets': real truths about people or technology that everyone else overlooked because they assumed everything important had already been discovered.",
+        "realLifeExample": "Airbnb succeeded because founders noticed a hidden secret: ordinary travelers were willing to stay in strangers' spare bedrooms if there were clear photos, reviews, and safe payments.",
+        "whyItMatters": "Spreading your time thinly across 10 average projects loses to pouring your energy into the 1 high-potential opportunity."
+      },
+      {
+        "partNumber": 5,
+        "partTitle": "Distribution Matters Just as Much as the Product",
+        "keyIdea": "Many smart builders believe 'if I make a great product, customers will magically show up.' That is almost never true. How you sell, reach, and deliver your product to customers ('distribution') is just as important as building it. Before committing years to a project, check seven basics: Is the product 10x better? Is the timing right? Can you dominate a small niche? Do you have the right team? How will you sell it? Will it still matter in 10 years? What secret do you know?",
+        "realLifeExample": "A helpful neighborhood repair app fails if the founder spends 12 months coding features and 0 hours figuring out how local homeowners will actually hear about and trust it.",
+        "whyItMatters": "Stops builders from wasting years creating great work that sits unseen on a shelf."
+      }
+    ],
+    "keyInsights": [
+      "Always ask yourself: 'What important truth do very few people agree with you on?'",
+      "Avoid crowded copycat businesses where everyone fights over price; solve one specific problem much better than anyone else.",
+      "Do not chase a tiny slice of a massive market—dominate a small, clear niche first and grow outward.",
+      "One great project or career bet usually matters more than ten average ones put together.",
+      "Building something great is only half the job; having a clear plan to reach and win customers is the other half.",
+      "Never imitate a competitor out of pride—focus on making something customers genuinely cannot replace."
+    ],
+    "dailyImplementation": [
+      "Before starting any new side project or business idea, write down who your first 50 exact customers are and how you will personally reach them.",
+      "Ask yourself once a week: 'Am I just copying what everyone around me is doing, or am I bringing a fresh, better approach?'",
+      "Make your niche smaller and clearer: instead of trying to help 'everyone,' pick one specific group with an urgent problem you can solve 10x better.",
+      "Look at your to-do list and circle the single task or skill that creates the biggest long-term payoff, then protect time for that task first.",
+      "Notice daily frustrations people complain about and ask, 'What simple truth is everyone ignoring here?'",
+      "Whenever you build a product, service, or skill, spend equal time practicing how to explain and share its value clearly with others."
+    ],
+    "strengthWeakness": "Where it is strong: Sharp, memorable ideas that force you to stop copying the crowd and think clearly about long-term value. Where it is weak: Written mainly for big tech startups seeking venture funding, so small local businesses have to adapt its monopoly ideas carefully."
+  },
+  {
+    "id": "thinking-fast-and-slow",
+    "day": 4,
+    "date": "2026-10-22",
+    "title": "Thinking, Fast and Slow",
+    "subtitle": "The Two Systems That Drive the Way We Think",
+    "author": "Daniel Kahneman",
+    "category": "Self-Growth",
+    "year": 2011,
+    "readingTimeMin": 10,
+    "qualificationRationale": "Written by a Nobel Prize-winning psychologist; explains in plain experiments why smart people still fall into predictable mental traps every day.",
+    "thesis": "Our brains use two different modes—a fast, emotional autopilot (System 1) and a slow, careful thinker (System 2)—and most everyday mistakes happen when our lazy slow brain trusts our fast brain without double-checking.",
+    "conflictNote": "A few social priming experiments from early chapters did not hold up in later re-tests (which Kahneman openly noted), while the major findings on biases, anchoring, and loss aversion remain rock-solid.",
+    "sourcesChecked": [
+      "Nobel Economics Prize Research Lectures",
+      "Kahneman & Tversky Decision Studies",
+      "Journal of Behavioral Decision Making"
+    ],
+    "structure": [
+      {
+        "partNumber": 1,
+        "partTitle": "Meet Your Two Minds: Fast Autopilot vs. Slow Thinker",
+        "keyIdea": "System 1 is your fast, automatic autopilot—it instantly recognizes an angry face, reads a billboard, or answers '2 + 2'. System 2 is your slow, careful thinker—it solves '17 x 24', compares two apartment leases, or checks facts. Because System 2 takes effort and burns mental energy, it is lazy and usually agrees with whatever System 1 guesses first.",
+        "realLifeExample": "When you hear a rumor or read a shocking headline, System 1 immediately feels angry or convinced before System 2 ever bothers to check if the source is real.",
+        "whyItMatters": "Recognizing when you are on autopilot helps you pause and turn on careful thinking before signing contracts or saying things you regret."
+      },
+      {
+        "partNumber": 2,
+        "partTitle": "Mental Shortcuts: Jumping to Conclusions & Anchoring",
+        "keyIdea": "System 1 relies on 'What You See Is All There Is'—it builds a full story from just a tiny piece of information and ignores what it does not know. Two common traps are 'Anchoring' (letting the first number you hear pull your final guess, like a high fake price tag) and 'Availability' (thinking scary events like plane crashes happen often just because you saw them on the news yesterday).",
+        "realLifeExample": "A jacket marked '$200, now on sale for $100' feels like a steal compared to a $100 jacket with no discount tag, because your brain anchored on $200.",
+        "whyItMatters": "Spotting price anchors and missing facts protects your wallet and improves your everyday judgment."
+      },
+      {
+        "partNumber": 3,
+        "partTitle": "Overconfidence & Fooling Ourselves After the Fact",
+        "keyIdea": "Once something happens, our brain rewrites history to make it look obvious ('I knew it all along!'—called hindsight bias). This tricks us into feeling overconfident about predicting the future. Surprisingly, simple checklists and basic math rules beat 'expert gut feelings' in everything from hospital diagnoses to hiring interviews.",
+        "realLifeExample": "When hiring someone, interviewing without a standard scorecard often leads managers to pick whoever reminded them of themselves in the first 3 minutes.",
+        "whyItMatters": "Using simple checklists and tracking real base odds keeps overconfidence from causing expensive mistakes."
+      },
+      {
+        "partNumber": 4,
+        "partTitle": "Why Losing Hurts Twice as Much as Winning Feels Good",
+        "keyIdea": "Humans hate losing far more than they enjoy winning—losing $100 hurts roughly twice as much as finding $100 feels good (called Loss Aversion). Because of this pain, people often make strange choices: they refuse a safe gain? No, they lock in tiny wins too fast, yet take crazy risks to avoid admitting a loss.",
+        "realLifeExample": "An investor sells a good stock quickly to lock in a $200 profit, but holds onto a bad failing stock for years hoping it will climb back to even so they do not have to admit a loss.",
+        "whyItMatters": "Knowing that fear of loss warps your choices helps you cut bad commitments sooner instead of throwing good time and money after bad."
+      },
+      {
+        "partNumber": 5,
+        "partTitle": "The Self Living Now vs. The Self Remembering Later",
+        "keyIdea": "Inside you are two selves: the 'Experiencing Self' who feels each minute as it happens, and the 'Remembering Self' who writes the memory story afterward. Strangely, your Remembering Self mostly ignores how long something lasted and judges the whole event by two moments: the strongest emotional peak and how it ended (the Peak-End Rule).",
+        "realLifeExample": "A 7-day vacation that goes smoothly for 6 days and ends with a lost bag and a rude flight feels worse in memory than a 3-day trip with a wonderful final dinner.",
+        "whyItMatters": "Helps you design better endings for trips, meetings, and tough projects—and choose real daily happiness over mere bragging memories."
+      }
+    ],
+    "keyInsights": [
+      "Your brain runs on fast autopilot most of the day; slow down on purpose whenever money, health, or relationships are on the line.",
+      "Do not judge a deal by its 'original price'—ignore the anchor and ask what the item is truly worth to you.",
+      "What you see right now is rarely the whole story; ask 'What important facts am I NOT seeing yet?'",
+      "Losing hurts twice as much as winning feels good, which tricks us into clinging to bad habits, jobs, or investments too long.",
+      "Simple written scorecards and checklists beat 'gut feelings' when hiring, buying, or solving hard problems.",
+      "People remember experiences mostly by their emotional peak and how they ended, so always finish important moments well."
+    ],
+    "dailyImplementation": [
+      "Before making any decision over $100, wait 24 hours and write down 2 pros and 2 cons so your slow thinking brain wakes up.",
+      "When you see a big 'Was $X, Now $Y' sale sticker, cover up the original price and ask: 'Would I happily pay $Y for this if there were no discount?'",
+      "Create a short 4-question checklist for repeated life choices (like hiring someone, renting an apartment, or starting a new project) instead of relying on vibes.",
+      "Ask yourself once a month: 'Am I keeping this task, subscription, or investment only because I hate admitting I already wasted time or money on it?'",
+      "When ending a tough conversation, meeting, or family trip, put extra care into finishing warmly and calmly so everyone remembers it well.",
+      "Before trusting a dramatic news story, pause and look up the actual real-world numbers instead of judging by one scary example."
+    ],
+    "strengthWeakness": "Where it is strong: Packed with eye-opening real-world examples that forever change how you notice your own thinking traps. Where it is weak: The original book is very long and academic, and it explains our biases better than it teaches quick everyday tricks to overcome them."
+  },
+  {
+    "id": "the-intelligent-investor",
+    "day": 5,
+    "date": "2026-10-23",
+    "title": "The Intelligent Investor",
+    "subtitle": "The Definitive Book on Value Investing",
+    "author": "Benjamin Graham",
+    "category": "Investing",
+    "year": 1949,
+    "readingTimeMin": 9,
+    "qualificationRationale": "Warren Buffett calls it the best book on investing ever written because its timeless lessons on patience, value, and protecting your downside still work today.",
+    "thesis": "Smart investing is calm, careful business ownership—not gambling on daily price jumps—where you protect your money by buying good businesses for less than they are truly worth.",
+    "conflictNote": "Some exact 1949 accounting ratios are outdated for modern tech companies, but the core ideas—Mr. Market, Margin of Safety, and emotional control—are universally respected.",
+    "sourcesChecked": [
+      "Columbia Business School Value Investing Notes",
+      "Warren Buffett Shareholder Letters",
+      "CFA Institute & Financial Classics Reviews"
+    ],
+    "structure": [
+      {
+        "partNumber": 1,
+        "partTitle": "Investing vs. Gambling (Speculating)",
+        "keyIdea": "Graham draws a bright line between investing and gambling. Investing means you carefully study a business, protect your original cash from big losses, and expect a steady, reasonable gain. Speculating (gambling) means buying something just because you hope someone else will pay more for it next week without knowing what the business actually earns.",
+        "realLifeExample": "Buying a steady dividend-paying company or broad market fund after checking its earnings is investing; buying a random hot coin because a friend said it might double by Friday is speculating.",
+        "whyItMatters": "Knowing which game you are playing stops you from turning your life savings into a casino ticket."
+      },
+      {
+        "partNumber": 2,
+        "partTitle": "Two Styles: The Hands-Off Investor vs. The Active Researcher",
+        "keyIdea": "You do not have to study financial statements every night to invest well. Graham splits investors into two honest paths: the 'Defensive' (hands-off) investor who puts money steadily each month into a simple mix of safe bonds and broad index stocks, and the 'Enterprising' (active) investor who treats stock research like a serious part-time job. Most people get hurt trying to act active with defensive effort.",
+        "realLifeExample": "A busy doctor automatically puts $500 every month into a low-cost total stock and bond fund (Defensive), spending zero hours worrying about single stocks.",
+        "whyItMatters": "Picking the style that matches your actual free time protects you from costly half-baked stock picks."
+      },
+      {
+        "partNumber": 3,
+        "partTitle": "The Story of 'Mr. Market'",
+        "keyIdea": "Imagine you and a moody partner named Mr. Market own a small store together. Every single morning, Mr. Market knocks on your door and offers to buy your half or sell you his half. On cheerful days, he names a crazy high price; on gloomy days, he panics and offers his half super cheap. You never have to obey him—you can ignore his mood swings or buy from him only when his price is absurdly cheap.",
+        "realLifeExample": "If a solid company still sells groceries and earns steady profits, but its stock drops 30% because of scary headlines, Mr. Market is having a gloomy day—not offering proof that the store is broken.",
+        "whyItMatters": "Teaches you that daily stock price drops are opportunities for patient buyers, not reasons to panic."
+      },
+      {
+        "partNumber": 4,
+        "partTitle": "A Stock Is a Piece of a Real Business",
+        "keyIdea": "Never look at a stock as just a jumping number on a phone app. Every share means you actually own a tiny piece of a real company with employees, products, bills, and profits. Check simple health signs: Does the company earn real steady profits year after year? Does it carry manageable debt instead of drowning in loans? Does it treat shareholders fairly?",
+        "realLifeExample": "Before buying shares in a coffee chain, ask yourself the same questions you would ask before buying a local cafe: Are customers returning, are profits growing, and are debts low?",
+        "whyItMatters": "Thinking like a business owner stops you from chasing empty hype companies with zero real earnings."
+      },
+      {
+        "partNumber": 5,
+        "partTitle": "The Three Magic Words: Margin of Safety",
+        "keyIdea": "Graham sums up smart investing in three words: 'Margin of Safety.' It simply means leaving a huge cushion between what something is actually worth and the price you pay for it. Think of an engineer building a bridge: if trucks weigh 10,000 pounds, you build the bridge to hold 30,000 pounds just in case. Paying less than true value protects you if your estimates turn out slightly wrong or bad luck strikes.",
+        "realLifeExample": "If careful math shows a house or business is reasonably worth $100,000, wait to buy it for $65,000 or $70,000 so even a sluggish year will not ruin you.",
+        "whyItMatters": "Nobody predicts the future perfectly; a built-in safety cushion ensures mistakes stay small and survivable."
+      }
+    ],
+    "keyInsights": [
+      "The investor's biggest enemy is rarely the market—it is usually their own fear and greed.",
+      "Do not confuse gambling on hype with real investing based on steady business value.",
+      "In the short run, the market acts like a popularity contest; in the long run, it acts like a weighing scale measuring real profits.",
+      "Treat Mr. Market's daily price swings as a helpful servant when prices drop low, never as a boss telling you what your business is worth.",
+      "Always demand a Margin of Safety: never overpay so much that everything has to go right for you to break even.",
+      "Match your investing method to your free time—steady monthly investing beats sloppy stock picking."
+    ],
+    "dailyImplementation": [
+      "Automate a fixed monthly investment into a simple, low-cost diversified fund so you buy steadily whether markets are up or down.",
+      "Set a personal rule never to buy any investment because of a hot tip unless you can explain in two plain sentences how that business makes money.",
+      "Keep a separate small 'learning or fun' account (no more than 5% of savings) if you ever feel tempted to try risky trades, keeping 95% safe.",
+      "Next time headlines yell about a market drop, close your investing app and remember Mr. Market is just offering a sale.",
+      "Before buying a big asset (a home, car, or stock), calculate a worst-case scenario first to make sure you have a safe cushion.",
+      "Write down why you bought an investment on the day you buy it so you can check your calm logic later if prices swing."
+    ],
+    "strengthWeakness": "Where it is strong: Teaches rock-solid emotional discipline and common sense that prevent major financial wipeouts. Where it is weak: Old mid-1900s accounting examples feel dated, and modern beginners are often better served starting with simple index funds before picking single stocks."
+  },
+  {
+    "id": "principles-life-and-work",
+    "day": 6,
+    "date": "2026-10-24",
+    "title": "Principles: Life and Work",
+    "subtitle": "Unconventional Principles for Work and Life",
+    "author": "Ray Dalio",
+    "category": "Business",
+    "year": 2017,
+    "readingTimeMin": 10,
+    "qualificationRationale": "Written by the founder of the world's largest hedge fund; shows how writing down clear life rules and facing mistakes honestly turns failures into fuel.",
+    "thesis": "Life works better when you face reality honestly, turn every painful mistake into a written lesson ('Pain + Reflection = Progress'), and listen openly to people who know more than you.",
+    "conflictNote": "Some workers find Dalio's workplace style of constant blunt feedback emotionally tough; Dalio notes honest feedback only works when everyone values truth over protecting their ego.",
+    "sourcesChecked": [
+      "Bridgewater Associates Operating Manual",
+      "Harvard Business School Organizational Studies",
+      "Wall Street Journal & Bloomberg Interviews"
+    ],
+    "structure": [
+      {
+        "partNumber": 1,
+        "partTitle": "Face Reality & Pain + Reflection = Progress",
+        "keyIdea": "Early in his career, Ray Dalio made a huge arrogant bet that wiped out his firm and forced him to borrow $4,000 from his dad to pay bills. That painful crash taught him his #1 rule: stop wishing reality were different and deal with the facts as they actually are. Whenever something hurts or fails, do not run away—write down what went wrong and what rule will prevent it next time. Pain plus reflection equals progress.",
+        "realLifeExample": "Instead of blaming a rude customer or bad luck after losing a client, sit down quietly with a notebook and list the 2 things you missed early on.",
+        "whyItMatters": "Every mistake contains a free lesson; avoiding reflection means you keep repeating the same painful mistakes."
+      },
+      {
+        "partNumber": 2,
+        "partTitle": "The 5-Step Process to Reach Any Goal",
+        "keyIdea": "Getting what you want follows five clear steps done in order: 1. Pick clear goals. 2. Spot the problems standing in your way—do not ignore them. 3. Find the real root cause of each problem (not just the surface symptom). 4. Design a practical plan to fix the root cause. 5. Push through and do the work. Most people fail because they mix up these steps or stop after complaining about Step 2.",
+        "realLifeExample": "If you are always late to work (problem), the surface fix is driving faster, while the root cause (Step 3) might be staying up scrolling until midnight—so the real design fix (Step 4) is charging your phone in the kitchen.",
+        "whyItMatters": "Fixes problems permanently at the source instead of putting band-aids on the same annoyance every month."
+      },
+      {
+        "partNumber": 3,
+        "partTitle": "Beat Your Ego and Blind Spots with Open-Mindedness",
+        "keyIdea": "Two invisible enemies ruin good decisions: your ego (wanting to look smart and be right) and your blind spots (things your brain naturally misses). To beat both, practice 'radical open-mindedness'—instead of arguing to win, get genuinely curious when smart people disagree with you and ask them to walk you through how they see it.",
+        "realLifeExample": "Before launching a big project, ask a blunt friend or coworker: 'Tell me honestly—where do you see a hole in this plan?' and listen without defending yourself.",
+        "whyItMatters": "Your goal is to get the best answer, not to prove your first guess was right."
+      },
+      {
+        "partNumber": 4,
+        "partTitle": "How Good Teams Decide: Believability-Weighted Decisions",
+        "keyIdea": "Not every opinion on a topic carries the same weight. If you want heart surgery, you do not take a majority vote among five random neighbors—you listen carefully to experienced heart surgeons who can clearly explain their reasoning. Dalio calls this 'believability weighting': listen to everyone respectfully, but weigh advice most heavily from people who have succeeded multiple times at the exact thing you are trying to do.",
+        "realLifeExample": "When starting a bakery, give far more weight to advice from someone who has run two profitable bakeries for 10 years than to a friend who has never run a food business.",
+        "whyItMatters": "Protects teams and individuals from loud, confident amateurs while still inviting honest debate."
+      },
+      {
+        "partNumber": 5,
+        "partTitle": "Step Back and Look at Your Life Like a Machine",
+        "keyIdea": "Imagine floating above your day-to-day life and looking down at your work or household like an engineer inspecting a machine. Every machine has two parts: the design (the schedule, habits, and rules) and the people (you and your team). When results keep going wrong, do not just get mad—step back and ask whether the design needs fixing or someone needs training or a different role.",
+        "realLifeExample": "If your team misses deadlines every Friday, stop yelling and inspect the workflow—maybe tasks are getting assigned too late on Thursday afternoon.",
+        "whyItMatters": "Replaces frustration and blame with calm, step-by-step problem solving."
+      }
+    ],
+    "keyInsights": [
+      "Pain + Reflection = Progress: every setback is a signal showing you a new rule to learn.",
+      "Never confuse what you wish were true with what the real facts actually show.",
+      "Do not rush to fix a symptom—dig until you find the true root cause underneath.",
+      "Your biggest blocks are your ego (needing to look right) and blind spots (what you cannot see alone).",
+      "Weigh advice by track record: listen carefully to people who have actually done the thing well several times.",
+      "Write down your personal principles so you make calm decisions on hard days instead of reacting emotionally."
+    ],
+    "dailyImplementation": [
+      "Keep a small 'Lessons Learned' note on your phone; whenever something goes wrong or upsets you, write 2 sentences on what happened and what rule to use next time.",
+      "When you feel defensive during a disagreement, pause and say: 'Help me understand what I might be missing here.'",
+      "Run the 5-Step Process on one nagging problem in your life this week, making sure you identify the real root cause before making a plan.",
+      "Before taking big career, health, or money advice, ask yourself: 'Has this person actually succeeded repeatedly in this exact area?'",
+      "Every Sunday for 10 minutes, step back and look at your week like an engineer—what one part of your daily schedule broke down and how can you redesign it?",
+      "Be honest with yourself in writing about one weakness you have, and pair up with someone strong in that area or set a reminder to cover it."
+    ],
+    "strengthWeakness": "Where it is strong: Gives a practical, crystal-clear system for turning failures into wisdom and fixing messy problems at the root. Where it is weak: Can feel a bit cold or overly mechanical when applied to sensitive family or emotional relationships."
+  },
+  {
+    "id": "high-output-management",
+    "day": 7,
+    "date": "2026-10-25",
+    "title": "High Output Management",
+    "subtitle": "A Practical-Minded Primer on Organizational Leverage",
+    "author": "Andrew S. Grove",
+    "category": "Management",
+    "year": 1983,
+    "readingTimeMin": 9,
+    "qualificationRationale": "Written by former Intel CEO Andy Grove; revered across Silicon Valley as the clearest practical handbook on managing teams, meetings, and time.",
+    "thesis": "A manager's real job is not doing tasks alone—it is multiplying the results of the entire team by focusing on high-impact activities, clear goals, and supportive coaching.",
+    "conflictNote": "While written in the era of factories and offices, leaders in modern remote software companies still use its 1-on-1 meetings, bottlenecks, and OKRs daily.",
+    "sourcesChecked": [
+      "Intel Operational Archives & Andy Grove Papers",
+      "Stanford Graduate School of Business Cases",
+      "Andreessen Horowitz Management Guides"
+    ],
+    "structure": [
+      {
+        "partNumber": 1,
+        "partTitle": "The Breakfast Factory: Finding the Bottleneck",
+        "keyIdea": "Grove explains every workflow using a simple cafe serving hot coffee, toast, and a three-minute boiled egg at the exact same moment. The egg takes the longest, so it is the 'limiting step' (the bottleneck). You plan every other step backward from that slowest step and check quality as early as possible—because catching a bad egg before boiling it is much cheaper than throwing out a ruined breakfast at the table.",
+        "realLifeExample": "If preparing a presentation always stalls waiting for design charts, start the chart requests first on Monday instead of waiting until Thursday afternoon.",
+        "whyItMatters": "Fixing the one slowest step speeds up your whole workday, whereas speeding up fast steps wastes energy."
+      },
+      {
+        "partNumber": 2,
+        "partTitle": "Managerial Leverage: Doing What Multiplies Results",
+        "keyIdea": "Your output as a leader equals the total work your whole team finishes well—not how many emails you personally answer. 'Leverage' means getting huge results from a small amount of time. Training someone well, setting clear goals, or unblocking a stuck teammate has massive leverage because one hour of your help improves their next 100 hours of work.",
+        "realLifeExample": "Spending 45 minutes teaching a coworker how to handle customer refunds properly saves you 5 hours of fixing messy mistakes every week for the next year.",
+        "whyItMatters": "Stops leaders from staying busy with tiny tasks while neglecting the coaching and planning that truly grow a team."
+      },
+      {
+        "partNumber": 3,
+        "partTitle": "Making Meetings Useful: The Power of 1-on-1s",
+        "keyIdea": "Bad meetings waste everyone's time, but good meetings are how teams align. The single best tool is a regular 1-on-1 meeting between a manager and each direct teammate. Keep the agenda in the teammate's hands—it is their meeting to share roadblocks, worries, and career ideas, while the manager mostly listens and asks open questions.",
+        "realLifeExample": "A 45-minute biweekly 1-on-1 reveals early on that a quiet teammate feels overwhelmed by unclear priorities, letting you fix it weeks before a deadline is missed.",
+        "whyItMatters": "Builds real trust, catches quiet problems early, and gives teammates support without hovering over them."
+      },
+      {
+        "partNumber": 4,
+        "partTitle": "Setting Clear Goals (OKRs) & Making Decisions",
+        "keyIdea": "Grove helped invent OKRs (Objectives and Key Results), which simply answer two clear questions: 1. Where do I want to go? (The Objective, e.g., 'Make customer onboarding effortless'). 2. How will I measure if I am getting there? (The Key Results, e.g., 'Cut setup time from 20 minutes to 5 minutes'). When making tough decisions, invite open debate first, then commit cleanly once a choice is made.",
+        "realLifeExample": "Instead of a vague goal like 'Get healthier,' use an OKR: Objective: 'Have more daily energy.' Key Results: 'Walk 30 minutes 5 days a week and sleep by 11 PM.'",
+        "whyItMatters": "Turns fuzzy wishes into clear numbers everyone can check each week."
+      },
+      {
+        "partNumber": 5,
+        "partTitle": "Adjust Your Coaching to Each Person's Experience (Task-Relevant Maturity)",
+        "keyIdea": "There is no single 'best' way to manage everyone; it depends on how experienced that person is at the specific task right in front of them. If someone is brand new to a task, give clear step-by-step instructions. If they have medium experience, coach and brainstorm together. If they are already an expert at that task, agree on the final goal and step out of their way.",
+        "realLifeExample": "A senior designer needs hands-off freedom when designing a webpage (high experience), but might still need step-by-step guidance the very first time they run a hiring budget (low experience).",
+        "whyItMatters": "Prevents both micromanaging skilled veterans and leaving beginners stranded without help."
+      }
+    ],
+    "keyInsights": [
+      "A leader's success is measured by what the whole team achieves together, not by how tired or busy the leader feels.",
+      "Focus your hours on high-leverage work—like teaching skills, removing bottlenecks, and clarifying goals.",
+      "Find the slowest bottleneck in any routine and organize everything around smoothing out that one step.",
+      "Regular 1-on-1 check-ins where the teammate leads the agenda are the best way to spot trouble early and build trust.",
+      "When someone is not doing a task well, there are only two reasons: either they do not know how (needs training) or they do not want to (needs motivation).",
+      "Match how closely you guide someone to their skill at THAT specific task—give newbies clear steps, and give experts freedom."
+    ],
+    "dailyImplementation": [
+      "Every morning, pick the one high-leverage task that makes the rest of your week or your team's week easier, and do it before checking casual messages.",
+      "Whenever you delegate or ask someone for help, check how familiar they are with that specific task and give either clear steps (for beginners) or just the end goal (for pros).",
+      "Hold a calm 30-minute 1-on-1 check-in with a teammate, partner, or coworker this week where you let them pick the topics and mostly listen.",
+      "Turn one vague personal or work goal into a clear Objective paired with 2 measurable numbers you can check on Friday.",
+      "Look at a slow chore or workflow at home or work, spot the single bottleneck slowing everything else down, and start that step earlier.",
+      "During group discussions, encourage honest disagreement early, then fully back the chosen plan once the decision is made."
+    ],
+    "strengthWeakness": "Where it is strong: Clear, down-to-earth, and immediately useful for organizing work, meetings, and team growth. Where it is weak: Uses factory and corporate examples from the 1980s, though the human principles work just as well today."
+  },
+  {
+    "id": "the-lean-startup",
+    "day": 8,
+    "date": "2026-10-26",
+    "title": "The Lean Startup",
+    "subtitle": "How Today's Entrepreneurs Use Continuous Innovation to Create Radically Successful Businesses",
+    "author": "Eric Ries",
+    "category": "Entrepreneurship",
+    "year": 2011,
+    "readingTimeMin": 9,
+    "qualificationRationale": "Changed how founders and product teams around the world test new ideas—saving countless hours and dollars by testing with real people early.",
+    "thesis": "Instead of spending a year building a secret product based on guesses, test your big assumptions fast with small real-world experiments so you learn what people truly want before running out of money.",
+    "conflictNote": "Critics warn that testing tiny changes too much can keep teams from imagining bold breakthroughs; Ries agrees bold vision is vital, and says fast testing simply helps prove that vision faster.",
+    "sourcesChecked": [
+      "Harvard Business School Lean Case Studies",
+      "Steve Blank Customer Development Guides",
+      "MIT Sloan Management Review"
+    ],
+    "structure": [
+      {
+        "partNumber": 1,
+        "partTitle": "Validated Learning Over Fake Progress",
+        "keyIdea": "When building something new, nobody knows for sure if customers will care. Finishing a gorgeous app or 50-page business plan on time means nothing if nobody uses or buys it. Real progress is 'Validated Learning'—running small real-world tests that prove with hard evidence that real people want what you are offering.",
+        "realLifeExample": "Zappos founder Nick Swinmurn did not build a giant shoe warehouse first; he took photos of shoes at local stores, posted them online, and bought a pair only when a real customer placed an order.",
+        "whyItMatters": "Keeps you from spending months perfecting something nobody ever wanted in the first place."
+      },
+      {
+        "partNumber": 2,
+        "partTitle": "The Build-Measure-Learn Loop & Minimum Viable Product (MVP)",
+        "keyIdea": "Every new idea should move quickly through a three-step circle: Build a tiny test version, Measure how real people react, and Learn whether to keep going or change direction. An MVP (Minimum Viable Product) is simply the smallest, fastest test version that lets you learn if people care—not a messy broken product, just a simple focused experiment.",
+        "realLifeExample": "Before coding an automated meal-prep app, launch a simple sign-up webpage and manually deliver 10 sample meal boxes via text message to see if people reorder.",
+        "whyItMatters": "Shrinking each test from 6 months down to 1 week lets you learn 20 times faster at a tiny fraction of the cost."
+      },
+      {
+        "partNumber": 3,
+        "partTitle": "Real Metrics vs. Vanity Metrics & When to Pivot",
+        "keyIdea": "'Vanity metrics' are feel-good numbers like total website hits or total downloads ever—they always go up even if everyone quits using your product after 5 minutes. Track real numbers instead, like how many people come back next week or pay again. If the real numbers stay flat after honest fixes, make a 'pivot': keep what you learned, change one key part of your strategy, and test again.",
+        "realLifeExample": "Having 10,000 total app downloads sounds exciting, but if only 40 people open the app a second time, you have a retention problem that needs a pivot.",
+        "whyItMatters": "Honest numbers tell you early when to adjust your plan instead of wasting years pushing a dead end."
+      },
+      {
+        "partNumber": 4,
+        "partTitle": "Small Batches & Finding the Root Cause ('The Five Whys')",
+        "keyIdea": "Working in small batches—releasing small updates often instead of giant updates once a year—catches bugs right away before they pile up. And whenever something breaks, avoid blaming people; ask 'Why?' five times in a row to trace the human mistake back to a missing checklist, unclear guide, or broken step.",
+        "realLifeExample": "A package shipped late. Why? Wrong address label. Why? Customer typed it manually twice. Why? The checkout form lacked address auto-check. Fix the form, and the mistake never repeats.",
+        "whyItMatters": "Turns everyday slip-ups into permanent improvements in how your work runs."
+      }
+    ],
+    "keyInsights": [
+      "The biggest waste in any project is building something smoothly and carefully that nobody actually wants.",
+      "Test your riskiest guess first using the simplest real-world experiment (MVP) you can create in a few days.",
+      "Do not fool yourself with feel-good numbers like total clicks; watch whether people actually return, pay, or recommend you.",
+      "Pivoting is not quitting—it is keeping your goal alive while changing a part of the plan that real evidence showed was broken.",
+      "Smaller, faster updates always teach you more than giant, slow launches.",
+      "Ask 'Why?' five times when something goes wrong so you fix the system, not just scold a person."
+    ],
+    "dailyImplementation": [
+      "If you have a project, hobby, or side business idea sitting in your head, create a 2-day miniature test this week and show it to 5 real people.",
+      "Write down the single scariest guess your idea depends on ('Will strangers pay $15 for this?') and test that guess before building extras.",
+      "Every Friday, look at one honest measure of real progress (completed habits, returning clients, real savings) rather than busy-work hours.",
+      "Whenever something goes wrong at work or home, ask 'Why?' gently three to five times until you spot the simple missing step you can fix.",
+      "Break your next big project into small weekly pieces you can finish and test right away instead of hiding away for months.",
+      "Be willing to drop features or plans you spent time on if real feedback proves people do not care about them."
+    ],
+    "strengthWeakness": "Where it is strong: Teaches smart, low-risk experimenting that saves huge amounts of time, cash, and heartbreak. Where it is weak: Easy to misuse as an excuse for sloppy, rushed quality, and less practical for things like bridges, medicines, or rockets that must be built right the first time."
+  },
+  {
+    "id": "poor-charlies-almanack",
+    "day": 9,
+    "date": "2026-10-27",
+    "title": "Poor Charlie's Almanack",
+    "subtitle": "The Essential Wit and Wisdom of Charles T. Munger",
+    "author": "Charles T. Munger (edited by Peter D. Kaufman)",
+    "category": "Investing",
+    "year": 2005,
+    "readingTimeMin": 10,
+    "qualificationRationale": "A beloved collection of talks by Warren Buffett's long-time partner Charlie Munger, packed with common-sense wisdom on clear thinking, psychology, and honest living.",
+    "thesis": "To make wise decisions in life and money, collect big basic ideas from many subjects (math, psychology, history, business), understand what rewards motivate people, and avoid foolish mistakes by flipping problems backward.",
+    "conflictNote": "Widely praised across business, science, and investing with virtually no disagreement on its timeless lessons.",
+    "sourcesChecked": [
+      "Berkshire Hathaway & Wesco Shareholder Transcripts",
+      "Harvard Law School Munger Speeches",
+      "Stripe Press Curated Edition Notes"
+    ],
+    "structure": [
+      {
+        "partNumber": 1,
+        "partTitle": "Buy Great Quality at a Fair Price & Keep Learning",
+        "keyIdea": "Charlie Munger helped persuade Warren Buffett to stop hunting solely for cheap, struggling 'bargain' companies and instead buy wonderful, strong businesses at fair prices and hold them for decades. Beyond investing, Munger insists the best investment you can make is going to bed a little wiser than you woke up—reading widely every day compounds your judgment just like interest compounds money.",
+        "realLifeExample": "Buying a well-built $200 pair of boots that lasts 10 comfortable years is smarter than buying $40 boots that fall apart every 6 months.",
+        "whyItMatters": "Quality saves you headaches and compounds quietly over time, both in what you buy and what you learn."
+      },
+      {
+        "partNumber": 2,
+        "partTitle": "Build a Toolkit of Mental Models Across Many Subjects",
+        "keyIdea": "Munger jokes: 'To a man with only a hammer, every problem looks like a nail.' If you only understand one subject, you will try to force every life problem into that single box and miss obvious answers. Instead, learn the core big ideas from many fields—like basic math odds, compound growth, human psychology, biology, and backup safety from engineering—so you see reality from multiple angles.",
+        "realLifeExample": "When picking a job, do not look only at the paycheck (math)—check how the team rewards people (psychology) and whether the industry is growing or shrinking (economics).",
+        "whyItMatters": "Having multiple lenses prevents narrow blind spots when making big career, family, or money decisions."
+      },
+      {
+        "partNumber": 3,
+        "partTitle": "Watch How Rewards Shape Behavior & Beware Crowd Mania",
+        "keyIdea": "Munger's golden rule of human nature is: 'Show me the incentive, and I will show you the outcome.' People naturally do whatever they are rewarded for, even good people—so never trust advice blindly if the advisor earns a fat commission only when you buy. Also, when several emotional triggers push together (greed + everyone else doing it + fear of missing out), people lose all common sense, creating wild bubbles Munger calls 'Lollapalooza effects.'",
+        "realLifeExample": "A real estate agent or financial salesperson paid purely on commission has a built-in reason to encourage you to buy or trade more often, even if staying put is better for you.",
+        "whyItMatters": "Checking who benefits financially from your choice protects you from bad advice and hype traps."
+      },
+      {
+        "partNumber": 4,
+        "partTitle": "Invert, Always Invert: Flip Problems Backward",
+        "keyIdea": "Instead of only asking 'How can I succeed?', ask the backward question: 'What would guarantee that I fail and end up miserable?' Then stay far away from those things! Often, avoiding obvious stupidity—like heavy debt, jealousy, unreliability, and laziness—does far more for your success than trying to be a genius.",
+        "realLifeExample": "Instead of asking only how to have a happy marriage or healthy body, list 5 things that ruin both (chronic lack of sleep, hidden resentment, zero exercise, bad spending) and cut them out.",
+        "whyItMatters": "Avoiding major blunders is easier and more reliable than trying to hit lucky home runs."
+      },
+      {
+        "partNumber": 5,
+        "partTitle": "Stay Inside Your Circle of Competence & Wait Patiently",
+        "keyIdea": "Know honestly what you truly understand and what you do not—Munger calls this your 'Circle of Competence.' It does not matter how small your circle is, as long as you know where its edges are and refuse to gamble outside them. And learn the rare art of patiently waiting until an unmistakably good opportunity lands right in front of you.",
+        "realLifeExample": "A skilled home builder who stays away from speculative tech stocks and invests in what they understand well avoids losing hard-earned money on trends they cannot judge.",
+        "whyItMatters": "Most big losses happen when smart people get overconfident in areas they barely understand."
+      }
+    ],
+    "keyInsights": [
+      "Invert, always invert: ask what causes failure, avoid those traps, and success often follows naturally.",
+      "Never overlook incentives: always check how someone gets paid or rewarded before following their advice.",
+      "Spend time every day reading and learning so you go to sleep slightly wiser than when you woke up.",
+      "Stay inside what you actually understand—knowing what you do NOT know keeps you safe.",
+      "Big wins come from sitting patiently and acting boldly only on the rare great opportunities, not from constant busy trading.",
+      "Be reliable, keep your word, and deliver more than you promise—simple trustworthiness opens every door in life."
+    ],
+    "dailyImplementation": [
+      "Before making any major decision this week, write down 3 ways it could go terribly wrong (inversion) and double-check that you have blocked them.",
+      "Whenever a salesperson, influencer, or advisor recommends something, ask: 'How do they get paid or benefit if I say yes?'",
+      "Carve out 20 quiet minutes every day to read something outside your usual job topic so you steadily build wider common sense.",
+      "Practice saying 'I don't know enough about this yet' whenever friends invite you to put money or time into a confusing trend.",
+      "Make a short personal checklist for important choices (big purchases, job offers, partnerships) so emotions never rush you.",
+      "Do what you say you will do, on time, every single day—reliability compounds faster than cleverness."
+    ],
+    "strengthWeakness": "Where it is strong: Packed with funny, razor-sharp common sense that protects you from bad deals and foolish thinking. Where it is weak: Written as speeches and essays rather than an organized textbook, so you have to pick out the lessons piece by piece."
+  },
+  {
+    "id": "the-hard-thing-about-hard-things",
+    "day": 10,
+    "date": "2026-10-28",
+    "title": "The Hard Thing About Hard Things",
+    "subtitle": "Building a Business When There Are No Easy Answers",
+    "author": "Ben Horowitz",
+    "category": "Business",
+    "year": 2014,
+    "readingTimeMin": 9,
+    "qualificationRationale": "Written by venture leader Ben Horowitz; famous for telling the raw, honest truth about leading through terrifying crises when every choice feels bad.",
+    "thesis": "Anyone can follow checklists when business is booming; real leadership happens during 'The Struggle'—when plans fall apart and you must keep your own head calm while making painful, lonely calls.",
+    "conflictNote": "Reviewers praise its honesty; some note his intense crisis-fighting style ('Wartime CEO') should only be used during emergencies, not during calm growth periods.",
+    "sourcesChecked": [
+      "Andreessen Horowitz Executive Notes",
+      "Opsware & Loudcloud Case Histories",
+      "Financial Times Leadership Reviews"
+    ],
+    "structure": [
+      {
+        "partNumber": 1,
+        "partTitle": "Facing 'The Struggle' When Everything Breaks",
+        "keyIdea": "Business books usually tell neat stories about brilliant plans. Real leadership often feels like 'The Struggle': waking up at 3 AM worried about payroll, watching products break, and seeing stock prices crash 90%. Horowitz survived near-bankruptcy multiple times by accepting that there is no magic formula for hard crises—you just keep searching for the next smart move when others quit.",
+        "realLifeExample": "During the 2000 tech crash, when his company's main revenue vanished overnight, Horowitz pivoted his software business twice and kept fighting until it eventually sold for $1.65 billion.",
+        "whyItMatters": "Knowing that feeling overwhelmed and terrified during hard times is completely normal keeps you from giving up too soon."
+      },
+      {
+        "partNumber": 2,
+        "partTitle": "Managing Your Own Mind Under Heavy Pressure",
+        "keyIdea": "The hardest skill a leader learns is controlling their own panic. When trouble hits, do not bottle everything up alone or try to carry every blame in silence. Share hard truths with trusted mentors, write down your messy worries on paper to see clearly, and focus strictly on the next actionable step right in front of you instead of staring at the disaster you fear.",
+        "realLifeExample": "Race car drivers learn to look at the open road ahead rather than staring at the wall—because wherever your eyes stare, your hands naturally steer.",
+        "whyItMatters": "If you let panic steer your choices, you make rushed mistakes that hurt everyone counting on you."
+      },
+      {
+        "partNumber": 3,
+        "partTitle": "Take Care of People, Products, and Profits (In That Order)",
+        "keyIdea": "Being a good company is easy when cash is flowing; it shows its true colors when times turn ugly. Put your People first (respect, fairness, honest communication), your Products second, and Profits third. When you treat people fairly and tell them the honest truth during hard patches, your best teammates stay loyal and fight alongside you.",
+        "realLifeExample": "Even when having to cut staff during a downturn, treating departing workers with deep respect, fair severance, and straight honesty keeps morale and trust intact among the team that stays.",
+        "whyItMatters": "Loyal, cared-for teammates are the only reason a team survives rough storms."
+      },
+      {
+        "partNumber": 4,
+        "partTitle": "Peacetime Leader vs. Wartime Leader",
+        "keyIdea": "A team needs different leadership depending on the situation. In 'Peacetime' (safe growth, clear lead), a leader empowers creativity, listens widely, and delegates freedom. In 'Wartime' (facing a life-or-death threat or urgent survival crisis), a leader must make fast decisions, focus everyone on one clear target, and check details personally.",
+        "realLifeExample": "In calm times, let your team experiment with new ideas; if a key client threatens to leave tomorrow and puts jobs at risk, step in quickly with a focused emergency plan.",
+        "whyItMatters": "Using gentle slow consensus during an emergency sinks the ship, while barking orders during calm days drives away great people."
+      },
+      {
+        "partNumber": 5,
+        "partTitle": "Tell the Honest Truth & Stop Office Politics",
+        "keyIdea": "Leaders often hide bad news to 'keep morale high,' which actually destroys trust because teammates usually sense trouble anyway. Share real problems openly so smart people can help solve them. Also, kill office politics by making pay raises and promotions follow clear, fair rules instead of rewarding whoever complains or flatters the loudest.",
+        "realLifeExample": "If sales missed the target by 30%, tell the team clearly in an all-hands meeting and ask for ideas rather than pretending everything is fine.",
+        "whyItMatters": "Honesty mobilizes problem solvers, while clear fair rules keep talented people from quitting due to unfairness."
+      }
+    ],
+    "keyInsights": [
+      "There is no secret recipe for truly hard times—expect 'The Struggle' and keep looking for one more smart move.",
+      "Managing your own stress and emotions is the most important skill during any crisis.",
+      "Put People first, Products second, Profits third—never flip that order.",
+      "Always tell the honest truth about problems; hiding bad news kills trust and stops teammates from helping.",
+      "Switch your style to fit the moment: encourage wide creativity in calm times, and take firm, focused control in emergencies.",
+      "Stop office politics by setting clear, fair rules for promotions and pay."
+    ],
+    "dailyImplementation": [
+      "When facing a stressful crisis at work or home, write down the problem on paper and list 2 concrete steps you can take in the next 24 hours.",
+      "Find one or two calm, trustworthy friends or mentors you can call honestly when everything feels messy, so you do not spiral alone.",
+      "If you need to share bad news with a teammate, client, or family member, deliver it directly, kindly, and truthfully without sugarcoating.",
+      "Make sure a team decision or promotion at work follows a clear written standard instead of gut favoritism.",
+      "Ask yourself right now: 'Is my current project in calm Peacetime (time to explore) or urgent Wartime (time to focus tightly on survival)?'",
+      "Look for one way to support and thank the people who carry your team or household through stressful weeks."
+    ],
+    "strengthWeakness": "Where it is strong: Refreshingly honest, funny, and reassuring—feels like getting straight advice from a veteran who survived real storms. Where it is weak: Tailored heavily toward high-pressure tech companies and managers, so beginners starting tiny solo projects may find parts intense."
+  },
+  {
+    "id": "never-split-the-difference",
+    "day": 11,
+    "date": "2026-10-28",
+    "title": "Never Split the Difference",
+    "subtitle": "Negotiating As If Your Life Depended On It",
+    "author": "Chris Voss with Tahl Raz",
+    "category": "Personal Development",
+    "year": 2016,
+    "readingTimeMin": 9,
+    "qualificationRationale": "Written by a former FBI lead hostage negotiator; teaches simple everyday speaking tricks that work in salary talks, rent deals, and family disagreements.",
+    "thesis": "Negotiation is not about winning a cold argument—it is about calmly listening so the other person feels deeply understood, then using gentle questions so they help solve your problem.",
+    "conflictNote": "Negotiation teachers widely praise Voss's listening and question tools; they work best alongside fair respect so talks feel collaborative rather than manipulative.",
+    "sourcesChecked": [
+      "FBI Crisis Negotiation Guides",
+      "Harvard Negotiation Program Reviews",
+      "Simon & Schuster Book Notes"
+    ],
+    "structure": [
+      {
+        "partNumber": 1,
+        "partTitle": "Mirroring & Calm Listening (Tactical Empathy)",
+        "keyIdea": "Instead of jumping in to argue your side, slow down and listen carefully using a calm, reassuring tone (Voss calls it the 'late-night FM DJ voice'). Use a simple trick called 'Mirroring': repeat the last 1 to 3 key words the other person just said as a gentle question. People naturally explain more, calm down, and reveal what they really care about.",
+        "realLifeExample": "If a boss says 'We really do not have the budget for a raise right now,' calmly say, 'No budget right now?' and stay quiet for 4 seconds—they will often explain what timing or bonus IS possible.",
+        "whyItMatters": "Makes the other person feel heard and opens up useful information without you giving up anything."
+      },
+      {
+        "partNumber": 2,
+        "partTitle": "Labeling Feelings & Clearing Away Worries",
+        "keyIdea": "When people are upset or stubborn, logical facts bounce right off them until their feelings feel recognized. 'Labeling' means gently naming what they seem to feel—starting with 'It sounds like...' or 'It seems like...' (never 'I hear you'). Also, before asking for something hard, list every negative thought they might have about you upfront (an 'Accusation Audit') so tension melts away.",
+        "realLifeExample": "Start a tough talk with a landlord by saying: 'It probably seems like I am being picky about these repairs, and I know you have a lot of properties to manage.'",
+        "whyItMatters": "Naming an uncomfortable feeling out loud takes away half its anger and makes people ready to cooperate."
+      },
+      {
+        "partNumber": 3,
+        "partTitle": "Why 'No' Is Safer Than a Fake 'Yes'",
+        "keyIdea": "Pushing someone to say 'yes' often makes them feel trapped, so they give a fake 'yes' just to end the call and ghost you later. Surprisingly, people feel safe and in control when they get to say 'no.' Asking a simple no-oriented question like 'Have you given up on this project?' gets a fast, honest reply when normal follow-up emails get ignored.",
+        "realLifeExample": "Instead of asking a busy client 'Do you have 5 minutes to talk?', ask 'Is now a terrible time to chat for two minutes?'—they feel safe and often say 'No, go ahead!'",
+        "whyItMatters": "Removes pressure so people drop their guard and actually talk with you honestly."
+      },
+      {
+        "partNumber": 4,
+        "partTitle": "Never Split the Difference & Aim for 'That's Right'",
+        "keyIdea": "Meeting halfway ('splitting the difference') often leaves both sides unhappy—like wearing one black shoe and one brown shoe. Watch out for 'You're right,' which usually means 'Leave me alone.' Your real goal is hearing them say 'That's right!' after you summarize their point of view, because that proves they trust that you truly understand them.",
+        "realLifeExample": "Sum up your teammate's frustration accurately from their perspective until they nod and say, 'Yes, that's right!'—only then suggest your idea.",
+        "whyItMatters": "True agreement starts the moment the other person believes you genuinely see the situation through their eyes."
+      },
+      {
+        "partNumber": 5,
+        "partTitle": "Calibrated 'How' and 'What' Questions & Hidden Clues",
+        "keyIdea": "Instead of saying 'No, I cannot afford that,' ask a gentle open question starting with 'How' or 'What': 'How am I supposed to do that?' or 'What would it take to make this work?' This politely invites the other person to help fix your problem. And keep listening for hidden clues ('Black Swans')—like an urgent deadline or personal goal—that completely change the deal.",
+        "realLifeExample": "When a contractor quotes $5,000 and your budget is $3,500, ask warmly: 'How can we adjust the scope so we get the essentials done closer to $3,500?'",
+        "whyItMatters": "Turns a tense tug-of-war into teamwork where both sides look for a creative solution."
+      }
+    ],
+    "keyInsights": [
+      "Do not compromise blindly—splitting the difference often produces a bad deal for everyone.",
+      "Repeat the other person's last 2–3 words gently ('Mirroring') and stay quiet to uncover what they truly want.",
+      "Name negative feelings calmly ('It sounds like this deadline feels rushed') to melt away tension.",
+      "Stop chasing 'Yes' early—let people say 'No' so they feel safe and respected.",
+      "Listen for 'That's right' (real trust) rather than 'You're right' (brushing you off).",
+      "Use 'How am I supposed to do that?' instead of arguing 'No'—it invites the other side to help solve your problem."
+    ],
+    "dailyImplementation": [
+      "Practice 'Mirroring' once today in a normal conversation: repeat the last 2–3 key words someone said with a curious tone and pause silently for 3 seconds.",
+      "Next time someone sounds frustrated at home or work, try starting a sentence with 'It sounds like you feel...' instead of defending yourself.",
+      "When a friend or client stops replying to emails, send a short message: 'Have you given up on getting this done?' to trigger an honest response.",
+      "Whenever you face a price or request that feels impossible, politely ask: 'How am I supposed to make that work?' instead of arguing.",
+      "Slow your speaking pace slightly during tense talks and lower your voice at the end of sentences to keep the mood calm.",
+      "Before a big talk (salary, rent, or project), write down 3 worries the other person might have about you and bring them up kindly upfront."
+    ],
+    "strengthWeakness": "Where it is strong: Immediately practical and fun to try—even one or two tricks improve daily conversations right away. Where it is weak: Works best with real human relationships and deals, and is less useful for fixed store prices or automated online contracts."
+  },
+  {
+    "id": "antifragile",
+    "day": 12,
+    "date": "2026-10-28",
+    "title": "Antifragile",
+    "subtitle": "Things That Gain from Disorder",
+    "author": "Nassim Nicholas Taleb",
+    "category": "Finance",
+    "year": 2012,
+    "readingTimeMin": 10,
+    "qualificationRationale": "A modern classic on risk and uncertainty that gives everyday people a completely new way to protect their money, career, and health from surprises.",
+    "thesis": "Some things break when stressed (fragile), some stay the same (tough), and the best things actually grow stronger from small shocks and surprises—called 'Antifragile.'",
+    "conflictNote": "Economists sometimes dislike Taleb's sharp tone toward academics, yet risk experts strongly support his practical rules for avoiding hidden financial wipeouts.",
+    "sourcesChecked": [
+      "Random House Book Archive",
+      "Mathematical Risk & Forecasting Reviews",
+      "Practitioner Finance Summaries"
+    ],
+    "structure": [
+      {
+        "partNumber": 1,
+        "partTitle": "Fragile vs. Tough vs. Antifragile",
+        "keyIdea": "Think of mailing three packages: a glass teacup is 'Fragile' (shakes break it). A steel brick is 'Robust' or tough (shakes leave it unchanged). 'Antifragile' is the true opposite of fragile—things that actually get BETTER from small bumps and stress, like human muscles getting stronger after lifting weights or a good immune system.",
+        "realLifeExample": "A freelancer with 8 regular small clients is antifragile compared to an employee with 1 boss: losing one client is a small bump that pushes you to find better clients, whereas losing your only job is a crisis.",
+        "whyItMatters": "Since nobody can predict every crisis, building a life that grows stronger from small shocks removes the fear of surprises."
+      },
+      {
+        "partNumber": 2,
+        "partTitle": "Why Hiding Small Problems Creates Huge Crashes",
+        "keyIdea": "Trying to smooth out every tiny bump in life or markets often creates a hidden time bomb. When forest rangers put out every tiny natural brush fire for 30 years, dry dead wood piles up until one unstoppable mega-fire burns the whole forest down. Small mistakes, small market dips, and small challenges teach systems how to stay healthy.",
+        "realLifeExample": "A child never allowed to make small mistakes or face mild disappointment has a much harder time coping when a real grown-up setback happens later.",
+        "whyItMatters": "Welcoming small, safe challenges keeps you sharp and prevents giant, unexpected breakdowns."
+      },
+      {
+        "partNumber": 3,
+        "partTitle": "The Barbell Strategy: Extreme Safety + Small Bold Bets",
+        "keyIdea": "Most people put their money or career in the 'medium risk' middle—which often hides surprise dangers. Taleb recommends a 'Barbell Strategy' (like weights on two ends with nothing in the middle): put about 90% of your money or stability in super-safe, boring essentials so you can never go broke, and put 10% into tiny bold experiments where you can only lose a little if wrong, but could win huge if right.",
+        "realLifeExample": "Keep a steady day job and safe savings to cover all family bills (90% safe), while spending evenings testing a creative side project or tiny startup idea (10% bold upside).",
+        "whyItMatters": "Lets you take exciting creative shots without ever putting your food, rent, or future security in danger."
+      },
+      {
+        "partNumber": 4,
+        "partTitle": "Keep Options Open & Trust What Has Lasted (The Lindy Effect)",
+        "keyIdea": "Having choices ('optionality') lets you keep what works and drop what does not—cheap trial-and-error beats thick theoretical plans. Also, notice the 'Lindy Effect': for non-physical things like books, ideas, and habits, the longer something has already survived, the longer it will likely keep working. A book still read after 200 years will probably still be wise in 200 more.",
+        "realLifeExample": "Instead of buying a brand-new trendy gadget or diet book that came out last month, try simple classic advice (walking, whole foods, classic books) that stood the test of decades.",
+        "whyItMatters": "Saves you from chasing passing fads and rewards cheap curiosity and patience."
+      },
+      {
+        "partNumber": 5,
+        "partTitle": "Skin in the Game & Improving by Subtracting ('Via Negativa')",
+        "keyIdea": "Two golden rules: First, never trust advice from anyone who does not have 'Skin in the Game'—meaning if their advice goes bad, you suffer the loss while they still keep their paycheck. Second, 'Via Negativa' means you often improve life fastest by removing bad habits rather than adding complicated new ones.",
+        "realLifeExample": "Before spending $200 on complex energy supplements, subtract 30 minutes of late-night screen scrolling and sugary soda—removing the bad habit works better and costs $0.",
+        "whyItMatters": "Protects you from smooth-talking experts and simplifies self-improvement."
+      }
+    ],
+    "keyInsights": [
+      "Build your life so small shocks make you sharper instead of knocking you down.",
+      "Use the Barbell Strategy: protect 90% of your life with rock-solid safety, and use 10% for small, low-cost bold experiments.",
+      "Improve by subtracting ('Via Negativa'): quitting one bad habit (debt, junk food, toxic gossip) beats adding five fancy hacks.",
+      "Never take big risks based on advice from someone who does not share the downside if they are wrong ('Skin in the Game').",
+      "Time is the best filter: classic books, skills, and simple habits that lasted 50+ years usually beat flashy new trends.",
+      "Avoid big debt—debt makes your life fragile when unexpected bad luck hits."
+    ],
+    "dailyImplementation": [
+      "Subtract one energy-draining habit this week (cutting late-night scrolling or unnecessary subscriptions) before buying any new productivity tool.",
+      "Keep your basic living costs safe and low, while setting aside 2 hours a week for a small creative experiment with tiny cost and big upside.",
+      "Never borrow money for things that lose value—staying out of debt keeps you tough during surprises.",
+      "Before taking advice on money, health, or work, ask: 'What happens to this person if I follow their advice and it goes wrong?'",
+      "Pick one classic time-tested book or timeless skill to practice instead of chasing this week's viral trend.",
+      "Develop two small backup skills or income sources so losing one never leaves you helpless."
+    ],
+    "strengthWeakness": "Where it is strong: Gives brilliant, unforgettable tools (Barbell Strategy, Via Negativa, Skin in the Game) to survive and thrive in an unpredictable world. Where it is weak: The original book is long, wandering, and uses tough technical words—so a plain-language summary is much easier to apply."
+  },
+  {
+    "id": "good-to-great",
+    "day": 13,
+    "date": "2026-10-28",
+    "title": "Good to Great",
+    "subtitle": "Why Some Companies Make the Leap and Others Don't",
+    "author": "Jim Collins",
+    "category": "Business",
+    "year": 2001,
+    "readingTimeMin": 9,
+    "qualificationRationale": "Based on a 5-year study of real companies that quietly beat the stock market by 3x+ for 15 straight years, showing what turns ordinary teams into lasting champions.",
+    "thesis": "Lasting greatness does not come from flashy celebrity bosses or lucky one-time stunts; it comes from humble leaders, picking the right teammates first, facing hard truths, focusing on one core strength, and pushing steadily every day.",
+    "conflictNote": "A few studied companies struggled years later when they stopped following these habits—which Collins points out confirms how important it is to keep practicing them consistently.",
+    "sourcesChecked": [
+      "Jim Collins 5-Year Empirical Study",
+      "Harvard Business Review Archives",
+      "Stanford Graduate School of Business Notes"
+    ],
+    "structure": [
+      {
+        "partNumber": 1,
+        "partTitle": "Level 5 Leadership: Humble Person, Fierce Determination",
+        "keyIdea": "Everyone expects great companies to be led by loud, famous TV personalities. Surprisingly, the best long-term leaders were quiet, humble, and stubbornly devoted to the company's success rather than their own ego. When things go right, they 'look out the window' to praise the team and luck; when things go wrong, they 'look in the mirror' and take personal responsibility.",
+        "realLifeExample": "When a team project wins an award, a Level 5 leader publicly names the teammates who stayed late; when the launch breaks, the leader says, 'I should have checked the plan closer.'",
+        "whyItMatters": "Humility builds lasting trust so great teams stay strong even after one boss leaves."
+      },
+      {
+        "partNumber": 2,
+        "partTitle": "First Who, Then What (The Right People on the Bus)",
+        "keyIdea": "Most leaders make a big plan first and then hunt for people to run it. Great leaders do the opposite: first get the right honest, motivated people 'on the bus,' get the wrong people off the bus, and put everyone in the right seat—AND THEN decide where to drive. If you start with trustworthy, adaptable people, you can easily adjust when the market shifts.",
+        "realLifeExample": "Hiring a reliable, curious teammate even before their exact job title is finalized beats rushing to hire an unreliable expert just to fill an empty desk.",
+        "whyItMatters": "The right people stay motivated on their own, so you waste zero time policing them."
+      },
+      {
+        "partNumber": 3,
+        "partTitle": "Face the Brutal Facts Without Losing Hope (The Stockdale Paradox)",
+        "keyIdea": "Named after Admiral Jim Stockdale, who survived 7 years as a prisoner of war: you must hold two opposite ideas at once. First, never lose quiet faith that you will win in the end. Second, face the honest, brutal facts of today without pretending things are rosy. Blind optimists ('We'll be out by Christmas!') break emotionally when deadlines slip.",
+        "realLifeExample": "If your savings are dropping every month, do not tell yourself 'Everything will magically work out'—face the exact numbers on paper today while calmly believing you can rebuild step by step.",
+        "whyItMatters": "Honest awareness lets you act early, while quiet hope keeps you fighting when things look tough."
+      },
+      {
+        "partNumber": 4,
+        "partTitle": "The Hedgehog Concept: Focus on One Simple Intersection",
+        "keyIdea": "In an old story, the clever fox tries dozens of tricks and stays scattered, while the simple hedgehog does one big thing well every time. Find your 'Hedgehog Concept' where three circles overlap: 1. What you truly care about. 2. What you can be genuinely great at. 3. What reliably pays the bills or brings real results. Say 'no' to shiny distractions outside those three circles.",
+        "realLifeExample": "A skilled teacher who loves helping teens with math and discovers parents happily pay for clear online video lessons focuses 100% there instead of opening a broad tutoring center for 12 random subjects.",
+        "whyItMatters": "Deep focus beats scattered busyness every single time."
+      },
+      {
+        "partNumber": 5,
+        "partTitle": "The Flywheel Effect vs. The Doom Loop",
+        "keyIdea": "Imagine pushing a giant, heavy metal wheel (a flywheel). The first push barely moves it an inch. Keep pushing steadily in the same direction—push after push after push—and soon the wheel builds unstoppable speed on its own. Struggling companies fall into the 'Doom Loop': jumping from one trendy new plan to another every 6 months, never building momentum.",
+        "realLifeExample": "Publishing one genuinely helpful article or improving one small customer step every week for two years builds steady word-of-mouth traffic that beats chasing overnight viral stunts.",
+        "whyItMatters": "Reminds you that big breakthroughs look sudden from the outside, yet always come from months of quiet, steady pushes."
+      }
+    ],
+    "keyInsights": [
+      "Good is the enemy of great: settling for 'good enough' is the main reason people and teams stop growing.",
+      "Great leaders share credit outward when things go right and take responsibility inward when things go wrong.",
+      "Pick trustworthy, hardworking people first before locking in big plans.",
+      "Face today's hard truth honestly while never losing quiet faith that you will find a way forward.",
+      "Focus where three things meet: what you love, what you can be truly great at, and what creates real value.",
+      "Keep pushing steadily in one direction (the Flywheel) instead of restarting with a brand-new flashy plan every few months."
+    ],
+    "dailyImplementation": [
+      "When something goes well today, thank a teammate or friend openly; when a mistake happens, take honest ownership without making excuses.",
+      "Draw the three Hedgehog circles for your career or project (Passion, Best Skill, What Pays) and cut one distracting commitment that sits outside them.",
+      "Write down the single hardest honest fact you have been avoiding about your money, work, or health, plus one small step to address it this week.",
+      "Pick one steady weekly habit—your 'Flywheel'—that you will keep pushing for the next 90 days without switching tracks.",
+      "Spend more time investing in honest, upbeat people around you, and politely step back from drama-filled relationships.",
+      "Make a short 'Stop Doing List' of 3 time-wasters you will quit this month so your best energy goes into what matters."
+    ],
+    "strengthWeakness": "Where it is strong: Clear, memorable ideas backed by years of real company data—the Flywheel and Hedgehog Concept are useful for both companies and individuals. Where it is weak: Built mostly on large traditional companies, so fast-moving solo creators must apply the ideas lightly."
+  },
+  {
+    "id": "the-most-important-thing",
+    "day": 14,
+    "date": "2026-10-29",
+    "title": "The Most Important Thing",
+    "subtitle": "Uncommon Sense for the Thoughtful Investor",
+    "author": "Howard Marks",
+    "category": "Investing",
+    "year": 2011,
+    "readingTimeMin": 9,
+    "qualificationRationale": "Praised by Warren Buffett as a must-read investing guide because it explains risk and market moods in calm, plain common sense.",
+    "thesis": "To beat average investing results, you have to think one step deeper than the crowd—buying solid assets when everyone else is scared and refusing to overpay when everyone is excited.",
+    "conflictNote": "Widely respected across value investing for teaching patience and risk control.",
+    "sourcesChecked": [
+      "Oaktree Capital Management Memos",
+      "Columbia University Press",
+      "Barron's Reviews"
+    ],
+    "structure": [
+      {
+        "partNumber": 1,
+        "partTitle": "Second-Level Thinking (Going One Step Deeper)",
+        "keyIdea": "First-level thinking is simple: 'This is a great company, so let us buy its stock.' Second-level thinking goes one step deeper: 'This is a great company, everyone knows it, and the price is already way too high—so it might actually be a bad buy right now.'",
+        "realLifeExample": "Everyone loves a popular cafe on the corner, so its owner asks triple the normal price to sell it—a second-level buyer realizes even a great cafe is a bad deal if you overpay.",
+        "whyItMatters": "You cannot get better results than everyone else if you simply buy what everyone else is cheering for."
+      },
+      {
+        "partNumber": 2,
+        "partTitle": "What Risk Really Means",
+        "keyIdea": "True risk is not prices bouncing up and down this week—true risk is permanently losing your money. Surprisingly, the riskiest time to invest is when everyone feels totally fearless and bids prices to the sky, because there is zero safety cushion left if anything goes wrong.",
+        "realLifeExample": "Buying a solid home for 20% under market value during a quiet winter feels scary, yet actually carries much less risk of losing money than buying in a bidding war.",
+        "whyItMatters": "Protecting yourself from big losses first gives your money room to grow safely over time."
+      },
+      {
+        "partNumber": 3,
+        "partTitle": "The Swing of Market Moods (Like a Pendulum)",
+        "keyIdea": "Investors rarely stay calm in the middle; they swing like a pendulum between wild greed ('Prices will go up forever!') and total panic ('Everything is doomed!'). Knowing that moods always swing back from extremes helps you stay steady instead of following the herd.",
+        "realLifeExample": "When friends brag about easy money overnight, the pendulum is near greed; when news channels say investing is dead, it is near fear—which is when patient buyers find bargains.",
+        "whyItMatters": "Staying calm when the crowd loses its head is how patient savers buy great things on sale."
+      },
+      {
+        "partNumber": 4,
+        "partTitle": "Accepting What You Cannot Predict",
+        "keyIdea": "Nobody can reliably predict what interest rates or the economy will do next year. Instead of guessing the future, pay attention to where prices sit today compared to normal history, and prepare for surprises.",
+        "realLifeExample": "You do not need to predict tomorrow's weather to pack a light umbrella when dark clouds are already overhead.",
+        "whyItMatters": "Saves you from trusting confident TV forecasts and keeps your focus on fair prices."
+      }
+    ],
+    "keyInsights": [
+      "First-level thinkers ask 'Is this good?'—second-level thinkers ask 'Is it cheap compared to what people already expect?'",
+      "Price is what you pay; value is what you get. Even a wonderful company can be a bad buy if the price is too high.",
+      "The biggest danger in investing is forgetting that bad times can happen—always protect your downside first.",
+      "Markets swing from greedy excitement to fearful panic; do the opposite of the crowd at extremes.",
+      "Focus on understanding what a business is worth today instead of trying to predict next year's economy."
+    ],
+    "dailyImplementation": [
+      "Before buying any popular stock, home, or trend, ask: 'What good news is ALREADY baked into this high price?'",
+      "Notice your own feelings before making money moves—if you feel rushed by FOMO (fear of missing out), wait 72 hours.",
+      "Keep extra cash ready so if market moods turn gloomy and prices drop sharply, you can stay calm or invest steadily.",
+      "Mute daily market prediction videos and check long-term value once a quarter instead.",
+      "Ask 'What is the worst realistic outcome here?' before committing big money to any new deal."
+    ],
+    "strengthWeakness": "Where it is strong: Teaches calm judgment and emotional control better than almost any finance book. Where it is weak: Focuses heavily on market cycles and value investing rather than simple starter index-fund checklists."
+  },
+  {
+    "id": "shoe-dog",
+    "day": 15,
+    "date": "2026-10-30",
+    "title": "Shoe Dog",
+    "subtitle": "A Memoir by the Creator of Nike",
+    "author": "Phil Knight",
+    "category": "Entrepreneurship",
+    "year": 2016,
+    "readingTimeMin": 9,
+    "qualificationRationale": "Praised by Bill Gates and Warren Buffett as an inspiring, honest story of how Nike was built from $50 through years of near-bankruptcy.",
+    "thesis": "Building something lasting rarely looks like a neat textbook plan—it takes deep belief in what you are making, loyal teammates, and refusing to quit when cash gets tight.",
+    "conflictNote": "Universally celebrated for showing the messy, stressful real life behind a famous global brand.",
+    "sourcesChecked": [
+      "Scribner Archives",
+      "Stanford GSB Case Studies",
+      "Nike Historical Records"
+    ],
+    "structure": [
+      {
+        "partNumber": 1,
+        "partTitle": "Starting Small with a Simple Obsession",
+        "keyIdea": "Phil Knight did not begin with a giant factory or millions of dollars. Fresh out of school with a love for running, he borrowed $50 from his dad to import high-quality Japanese running shoes and sold them out of the trunk of his car at local track meets.",
+        "realLifeExample": "Instead of waiting until you can afford a storefront, test selling a product you truly believe in directly at local meetups or online.",
+        "whyItMatters": "Starting small with real passion teaches you what customers genuinely love without risking everything."
+      },
+      {
+        "partNumber": 2,
+        "partTitle": "The Cash Crunch & Surviving Growth",
+        "keyIdea": "Even when Nike's shoe sales doubled every single year, the company almost went broke every few months because every dollar of profit had to buy even more shoes for the next order. Growth eats cash fast—so managing bank loans, bills, and inventory timing was a daily battle for over a decade.",
+        "realLifeExample": "A bakery gets a huge holiday order for 500 cakes—excited, they spend all their cash on flour and boxes, then cannot pay Friday's electric bill while waiting 30 days for the client's check.",
+        "whyItMatters": "Reminds builders to watch actual cash in the bank closely, especially when sales are growing fast."
+      },
+      {
+        "partNumber": 3,
+        "partTitle": "Building a Loyal, Honest Team",
+        "keyIdea": "Knight hired quirky, hardworking misfits—former runners, lawyers, and coaches—who cared deeply about the mission, argued openly without ego, and backed each other up through exhausting setbacks. Instead of micromanaging them, he told them the goal and trusted them to surprise him.",
+        "realLifeExample": "Give a trusted coworker or helper the clear result you need ('We need 100 happy customers this month') instead of watching every mouse click.",
+        "whyItMatters": "High-trust teams stay loyal during crises when fancy perks are gone."
+      },
+      {
+        "partNumber": 4,
+        "partTitle": "Creating Your Own Brand (The Swoosh)",
+        "keyIdea": "For years, Knight's company only distributed someone else's brand. When that supplier threatened to cut him off, he was forced to create his own shoes, logo (paying a design student $35 for the Swoosh), and name—Nike—giving them true independence.",
+        "realLifeExample": "If your business depends 100% on one supplier or one social platform, start building your own direct customer list and identity today.",
+        "whyItMatters": "Long-term safety comes from owning what makes you special rather than renting it from someone else."
+      }
+    ],
+    "keyInsights": [
+      "Do not tell capable people step-by-step how to do their job—tell them the clear goal and let them surprise you.",
+      "Fast growth eats cash quickly; always know how much real cash you have on hand to pay bills.",
+      "Genuine belief in what you sell is contagious—customers can feel when you truly care.",
+      "Never depend completely on one supplier or middleman who can pull the rug out from under you.",
+      "Keep moving forward through setbacks; most rivals simply quit when things get uncomfortable."
+    ],
+    "dailyImplementation": [
+      "Start your small project or goal this week with whatever tiny tools you already have instead of waiting for perfect funding.",
+      "Keep a simple weekly look at real cash coming in vs. bills going out so surprises never catch you off guard.",
+      "When asking someone to help with a task, state the clear goal and trust them with the 'how.'",
+      "Start building direct connections with the people you serve rather than relying only on one app or gatekeeper.",
+      "Whenever you hit a frustrating wall today, ask: 'What is one creative detour around this?' instead of quitting."
+    ],
+    "strengthWeakness": "Where it is strong: Honest, page-turning storytelling that makes tough entrepreneurial lessons stick effortlessly. Where it is weak: It is a personal life story, not a step-by-step business instruction manual."
+  },
+  {
+    "id": "deep-work",
+    "day": 16,
+    "date": "2026-10-31",
+    "title": "Deep Work",
+    "subtitle": "Rules for Focused Success in a Distracted World",
+    "author": "Cal Newport",
+    "category": "Self-Growth",
+    "year": 2016,
+    "readingTimeMin": 9,
+    "qualificationRationale": "One of the clearest modern guides on protecting your attention, beating phone distractions, and finishing meaningful work in less time.",
+    "thesis": "Being able to focus deeply without checking notifications is becoming rare—which makes calm, focused work one of the most valuable superpowers you can build today.",
+    "conflictNote": "Brain science strongly supports Newport's warning that jumping between tasks slows us down and drains mental energy.",
+    "sourcesChecked": [
+      "Grand Central Publishing",
+      "Cognitive Focus Studies",
+      "Georgetown Faculty Research"
+    ],
+    "structure": [
+      {
+        "partNumber": 1,
+        "partTitle": "Why Focus Beats Busywork (Attention Residue)",
+        "keyIdea": "Cal Newport splits work into two kinds: 'Shallow Work' (answering quick chats, sorting emails, endless meetings) and 'Deep Work' (quiet, distraction-free thinking that creates real value and teaches hard skills). Every time you glance at a text message while working, part of your brain stays stuck thinking about that message for 15–20 minutes afterward—a trap called 'Attention Residue.'",
+        "realLifeExample": "Writing an important report with email notifications popping up every 4 minutes takes 3 hours and feels exhausting, whereas doing it for 60 quiet minutes in airplane mode finishes it cleanly.",
+        "whyItMatters": "Protecting just 1–2 focused hours beats stretching scattered work across an entire 10-hour day."
+      },
+      {
+        "partNumber": 2,
+        "partTitle": "Rule 1: Schedule Deep Focus Like an Appointment",
+        "keyIdea": "Do not wait until you 'feel motivated' to focus—motivation fades fast. Instead, block fixed focus hours on your calendar, pick a quiet spot, turn off notifications, and create a simple starting ritual (like making tea and closing extra browser tabs).",
+        "realLifeExample": "Put a recurring 9:00–10:30 AM block named 'Focus Time' on your calendar Monday through Friday and keep your phone in another room during those 90 minutes.",
+        "whyItMatters": "Clear routines save your brain from wasting energy arguing about when to start."
+      },
+      {
+        "partNumber": 3,
+        "partTitle": "Rule 2: Get Comfortable with Boredom",
+        "keyIdea": "If you pull out your phone every time you wait 30 seconds in a coffee line or elevator, you train your brain to panic whenever things feel quiet. Practice sitting calmly without reaching for a screen so your focus muscle stays strong even when a tough task gets slow.",
+        "realLifeExample": "Leave your phone in your pocket while waiting at a stoplight, standing in grocery lines, or taking a 15-minute walk.",
+        "whyItMatters": "Training patience during idle moments makes concentrating at your desk effortless."
+      },
+      {
+        "partNumber": 4,
+        "partTitle": "Rule 3: Cut Noise & Shut Down Completely After Work",
+        "keyIdea": "Only keep social media or chat apps that truly improve your life or work—not ones you keep just out of habit. Equally important: pick a strict time every evening to close your laptop completely ('Shutdown Ritual') so your tired brain actually rests and resets for tomorrow.",
+        "realLifeExample": "At 5:30 PM, write tomorrow's top 3 tasks on a sticky note, close your computer, say 'Done for today,' and do not check work email until morning.",
+        "whyItMatters": "Real rest refills your focus tank so you produce better work in fewer hours."
+      }
+    ],
+    "keyInsights": [
+      "Quality output = Time spent x Intensity of focus—one truly focused hour beats three distracted hours.",
+      "Checking 'just one quick message' leaves mental fog behind ('attention residue') that ruins focus for 20 minutes.",
+      "Put focus blocks directly on your calendar and treat them like doctor appointments.",
+      "Train your focus muscle by letting yourself feel bored in lines without grabbing your phone.",
+      "End your workday at a clear time with zero evening email peeking so your mind truly rests."
+    ],
+    "dailyImplementation": [
+      "Pick one 60-minute block tomorrow morning, put your phone in another room, close email, and work on only one important task.",
+      "Turn off non-human notifications on your phone (badges, news alerts, social popups) so your screen stays quiet.",
+      "Stand in lines or ride the elevator today without pulling out your phone—just look around and let your mind breathe.",
+      "End your workday at a set hour by writing tomorrow's top 3 priorities on paper and closing all work tabs.",
+      "Try deleting or hiding your most distracting app for one 7-day test week to see how much calm free time returns."
+    ],
+    "strengthWeakness": "Where it is strong: Gives clear, practical rules that immediately reclaim hours of quiet peace and focus. Where it is weak: Jobs that require fast live customer replies make multi-hour isolation harder, so you have to shrink focus blocks to 45–60 minutes."
+  },
+  {
+    "id": "the-almanack-of-naval-ravikant",
+    "day": 17,
+    "date": "2026-11-01",
+    "title": "The Almanack of Naval Ravikant",
+    "subtitle": "A Guide to Wealth and Happiness",
+    "author": "Eric Jorgenson",
+    "category": "Self-Growth",
+    "year": 2020,
+    "readingTimeMin": 9,
+    "qualificationRationale": "A crisp, free-flowing collection of advice from angel investor Naval Ravikant on building calm wealth and everyday peace of mind.",
+    "thesis": "Lasting wealth comes from developing unique skills ('specific knowledge') paired with tools that multiply your effort while you sleep—while happiness comes from letting go of restless desires and enjoying the present moment.",
+    "conflictNote": "Widely loved for clear, inspiring mental models, though individual creators still have to supply the daily discipline to build skills.",
+    "sourcesChecked": [
+      "Naval Ravikant Public Essays",
+      "Podcast Transcripts",
+      "Scribe Media Archives"
+    ],
+    "structure": [
+      {
+        "partNumber": 1,
+        "partTitle": "Stop Just Renting Out Your Time (Specific Knowledge)",
+        "keyIdea": "If you only trade hours for an hourly paycheck, your income stops the second you take a week off. Real financial freedom comes from owning a piece of what you build (equity) and cultivating 'Specific Knowledge'—skills that cannot easily be copied from a short class, often found by following what genuinely fascinates you and feels like play to you even though it looks like hard work to others.",
+        "realLifeExample": "A nurse who loves simple cooking starts creating clear 5-minute diabetic recipe guides and ebooks—combining two real skills in a personal way no textbook teaches.",
+        "whyItMatters": "When you do work only you can uniquely do well, nobody can easily replace you."
+      },
+      {
+        "partNumber": 2,
+        "partTitle": "Leverage: Make Tools Work While You Sleep",
+        "keyIdea": "'Leverage' means multiplying the results of your effort. In the past, you needed permission from bosses or rich banks (hiring people or raising money). Today, anyone can use 'permissionless leverage': writing software code, creating helpful videos, writing guides, or building products that reach thousands of people automatically 24/7 without costing extra hours.",
+        "realLifeExample": "Recording one super-clear 15-minute video tutorial or building a helpful template once lets thousands of people learn from it all year while you sleep.",
+        "whyItMatters": "Decouples your income from how many tired hours you sit at a desk."
+      },
+      {
+        "partNumber": 3,
+        "partTitle": "Direction Matters More Than Speed (Good Judgment)",
+        "keyIdea": "Once tools multiply your work, choosing the RIGHT direction becomes 100 times more important than rushing faster in the wrong direction. Build good judgment by learning timeless basics—reading widely, staying calm, and checking long-term consequences—instead of frantically working 80 hours a week on low-value busywork.",
+        "realLifeExample": "Spending an afternoon choosing the right long-term career path or honest business partner pays off 1,000x more than rushing faster down a dead-end job.",
+        "whyItMatters": "Smart, calm choices save years of wasted hustle."
+      },
+      {
+        "partNumber": 4,
+        "partTitle": "Happiness Is a Quiet Mind Right Now",
+        "keyIdea": "Naval points out a simple truth: 'Desire is a contract you make with yourself to be unhappy until you get what you want.' If you tell yourself 'I will only be happy when I earn $X or buy Y,' you guarantee misery today—and soon move the goalpost anyway. Peace comes from needing less, exercising your body, spending time in nature, and appreciating right now.",
+        "realLifeExample": "Taking a peaceful morning walk without rushing or comparing your house to your neighbor's brings deeper joy than chasing another status purchase.",
+        "whyItMatters": "Makes sure financial progress actually turns into a peaceful, happy daily life."
+      }
+    ],
+    "keyInsights": [
+      "You will rarely achieve true freedom just trading hours for dollars—look for ways to build or own assets that grow over time.",
+      "Follow your genuine curiosity: what feels like play to you yet looks like work to others is your hidden superpower.",
+      "Code, writing, and media work for you around the clock once you build them well.",
+      "Choosing the right path and honest partners matters far more than working frantic hours.",
+      "A calm mind, a healthy body, and a loving home beat any luxury purchase.",
+      "Be careful what desires you chase—only chase things you truly care about, so you enjoy today as well."
+    ],
+    "dailyImplementation": [
+      "Write down 2 topics or activities that feel fun and effortless to you when friends find them tedious—explore how to combine them.",
+      "Share one helpful piece of knowledge you already know (a guide, checklist, tool, or post) that can help people even while you sleep.",
+      "Take 30 minutes away from screens today to walk outside quietly and let your mind settle.",
+      "Pick one honest, high-trust person to collaborate with or learn from this month.",
+      "Catch yourself saying 'I'll be happy when...' today, and name three ordinary things right around you to enjoy right now."
+    ],
+    "strengthWeakness": "Where it is strong: Full of crisp, memorable truths that lift you out of daily busywork and refresh how you view money and happiness. Where it is weak: Gives high-level life wisdom rather than detailed step-by-step career or budgeting instructions."
+  },
+  {
+    "id": "influence",
+    "day": 18,
+    "date": "2026-11-02",
+    "title": "Influence",
+    "subtitle": "The Psychology of Persuasion",
+    "author": "Robert B. Cialdini",
+    "category": "Business",
+    "year": 1984,
+    "readingTimeMin": 9,
+    "qualificationRationale": "A foundational psychology classic used worldwide to understand why people say 'yes'—and how to spot sales tricks before falling for them.",
+    "thesis": "Human brains rely on quick mental shortcuts to make decisions fast, and knowing the seven big persuasion triggers helps you both communicate ethically and protect yourself from clever sales traps.",
+    "conflictNote": "Decades of university psychology experiments strongly confirm Cialdini's triggers, though ethical readers emphasize using them honestly rather than for pushy sales.",
+    "sourcesChecked": [
+      "Arizona State University Psychology Studies",
+      "Harper Business Archives",
+      "Consumer Behavior Reviews"
+    ],
+    "structure": [
+      {
+        "partNumber": 1,
+        "partTitle": "Reciprocity & Giving First",
+        "keyIdea": "When someone gives us an unexpected gift or small favor, we naturally feel a strong urge to return the kindness. Restaurants that hand out a mint alongside the check see higher tips—especially if the server pauses and gives a second mint 'just for you.' Good leaders and generous teammates win lasting support simply by helping others first with zero strings attached.",
+        "realLifeExample": "Sharing a helpful template or introduction with a coworker for free builds natural goodwill long before you ever ask them for help.",
+        "whyItMatters": "Shows why genuine generosity opens doors, while also warning you to pause when a stranger gives a sudden 'free gift' right before pitching a high-pressure sale."
+      },
+      {
+        "partNumber": 2,
+        "partTitle": "Social Proof & Liking",
+        "keyIdea": "When we feel unsure what to do, we look around at what other people—especially people like us—are doing ('Social Proof'). We also say yes far more easily to people we like, find warm, or share small similarities with ('Liking'). That is why fake online reviews and celebrity ads work so strongly on busy shoppers.",
+        "realLifeExample": "Looking at a packed restaurant vs. an empty one on an unfamiliar street makes you assume the busy restaurant tastes better.",
+        "whyItMatters": "Helps you check whether you actually want something—or are just following a noisy crowd."
+      },
+      {
+        "partNumber": 3,
+        "partTitle": "Commitment, Consistency & Authority",
+        "keyIdea": "Once people say yes to one tiny step or write down a goal publicly, they try hard to stay consistent with their word—even if a big step comes later. Meanwhile, titles, suits, and uniforms ('Authority') make people obey without questioning.",
+        "realLifeExample": "Write down a healthy goal and tell one close friend so your natural desire to stay consistent helps you follow through.",
+        "whyItMatters": "Helps you turn small pledges into lasting habits while reminding you to check real facts behind fancy job titles."
+      },
+      {
+        "partNumber": 4,
+        "partTitle": "Scarcity & Fear of Missing Out",
+        "keyIdea": "Things instantly feel more valuable the moment we think they are running out ('Only 2 left! Sale ends in 10 minutes!'). Scarcity makes our logical brain panic and act fast before checking whether we even wanted the item in the first place.",
+        "realLifeExample": "An online travel site flashes '1 room left at this price!' to push you into booking before comparing two other hotels.",
+        "whyItMatters": "Spotting artificial countdown timers keeps your wallet safe from rushed impulse buys."
+      }
+    ],
+    "keyInsights": [
+      "Humans rarely analyze every tiny detail—we rely on shortcuts like 'if everyone likes it, it must be good.'",
+      "Helpful generosity first (Reciprocity) builds natural trust faster than cold pushing.",
+      "Small public commitments dramatically boost follow-through on hard goals.",
+      "Whenever you feel rushed by a 'last chance' countdown timer, your brain is reacting to Scarcity—slow down.",
+      "Always separate real kindness from sales pressure disguised as a favor."
+    ],
+    "dailyImplementation": [
+      "Whenever an app or store flashes 'Limited time! Only 1 left!', close the tab for 24 hours to test if you truly want the item.",
+      "Do one genuine, helpful favor today for a colleague or friend without expecting anything in return.",
+      "Say your next positive goal out loud or write it in a notebook so consistency nudges you forward.",
+      "Read both 5-star and 3-star reviews before buying anything important instead of trusting star counts alone.",
+      "Ask 'Why is this person telling me this right now?' whenever someone in a suit or uniform urges a quick money decision."
+    ],
+    "strengthWeakness": "Where it is strong: Fun stories and crystal-clear psychology you immediately notice everywhere in shops, work, and daily talks. Where it is weak: Explains human triggers brilliantly, so you must actively add your own moral filter to use persuasion kindly."
+  },
+  {
+    "id": "mans-search-for-meaning",
+    "day": 19,
+    "date": "2026-11-03",
+    "title": "Man's Search for Meaning",
+    "subtitle": "Finding Purpose Through Anything",
+    "author": "Viktor E. Frankl",
+    "category": "Personal Development",
+    "year": 1946,
+    "readingTimeMin": 8,
+    "qualificationRationale": "Ranked among the most influential books ever written; combines true survival memories with gentle, practical wisdom on staying hopeful during dark times.",
+    "thesis": "Everything can be taken from a person except one last human freedom: choosing your attitude and finding quiet meaning in how you respond to life's toughest moments.",
+    "conflictNote": "Historians and psychologists cherish Frankl's central lesson on purpose ('Logotherapy'), noting it works as a hopeful mindset alongside real medical support when needed.",
+    "sourcesChecked": [
+      "Beacon Press Classic Edition",
+      "Library of Congress Top Influential Books",
+      "Vienna Logotherapy Archives"
+    ],
+    "structure": [
+      {
+        "partNumber": 1,
+        "partTitle": "Between Stimulus and Response Lies Your Choice",
+        "keyIdea": "Frankl was a psychiatrist who survived unimaginably cruel years inside Nazi concentration camps. Even when prisoners lost their clothes, families, and control over every hour, he noticed some still shared their last crust of bread and comforted others. No matter what happens to you outside, there is a small space between what happens and how you choose to respond.",
+        "realLifeExample": "When someone snaps angrily at you in traffic or at work, pausing for one calm breath before replying lets you choose kindness instead of passing anger along.",
+        "whyItMatters": "Reminds you that bad circumstances do not get to decide the kind of person you become."
+      },
+      {
+        "partNumber": 2,
+        "partTitle": "Having a 'Why' Helps You Survive Almost Any 'How'",
+        "keyIdea": "Frankl saw that prisoners who had something waiting for them—a loving child, an unfinished scientific book, or a promise to fulfill—held on far longer than stronger people who felt life had nothing left to ask of them. Quoting Nietzsche, he wrote: 'He who has a WHY to live can bear almost any HOW.'",
+        "realLifeExample": "During exhausting weeks at a hard job or caregiving at home, remembering exactly whom you are caring for or what skill you are building brings quiet strength.",
+        "whyItMatters": "Chasing comfort alone leaves us empty; serving a person or purpose larger than ourselves makes tough days meaningful."
+      },
+      {
+        "partNumber": 3,
+        "partTitle": "Three Everyday Ways to Discover Meaning",
+        "keyIdea": "You do not need a grand philosophical speech to find meaning. Frankl showed three simple paths available to every single person today: 1. Doing helpful work or creating something worthwhile. 2. Loving and truly appreciating another person or beauty in the world (like a sunset or a piece of music). 3. Facing unavoidable hardship with quiet dignity and courage.",
+        "realLifeExample": "Cooking a warm meal carefully for your family, listening completely when a friend is hurting, or staying gentle during a tough recovery all create real meaning today.",
+        "whyItMatters": "Proves you never have to wait for money or fame to live a deeply meaningful day right now."
+      },
+      {
+        "partNumber": 4,
+        "partTitle": "Stop Chasing Happiness Directly",
+        "keyIdea": "Frankl warned that aiming directly at 'being happy all the time' usually makes people miserable and anxious. Happiness cannot be chased directly—it happens quietly on its own as a natural side effect when you throw yourself into caring for someone else or doing work that matters.",
+        "realLifeExample": "Volunteering an hour to teach a kid or helping an elderly neighbor with groceries leaves you unexpectedly joyful afterward—without ever trying to 'feel happy.'",
+        "whyItMatters": "Takes the pressure off forcing fake positivity and points straight to quiet everyday fulfillment."
+      }
+    ],
+    "keyInsights": [
+      "You cannot always control what happens to you, yet you always keep a small space to choose your response.",
+      "Do not ask 'What do I expect from life?'—ask 'What is life gently asking of me right now?'",
+      "Happiness grows quietly as a side effect of helping others and doing meaningful work—not by staring at yourself.",
+      "A clear 'Why' (someone you love or work worth finishing) carries you through storms that break comfort-seekers.",
+      "Everyday acts of kindness, care, and beauty already count as deep life meaning."
+    ],
+    "dailyImplementation": [
+      "When something annoying happens today, take one slow breath before answering so you choose your response intentionally.",
+      "Write down one clear 'Why' on a card near your desk: one person you care about or one helpful craft you want to give the world.",
+      "Do one small unseen kindness today—help a friend, write a thank-you note, or check in on someone lonely.",
+      "Notice one ordinary piece of beauty outside today (trees, sky, warm tea) and pause for 30 seconds just to appreciate it.",
+      "When facing a hard chore you cannot avoid, decide to handle it with calm patience rather than complaining all week."
+    ],
+    "strengthWeakness": "Where it is strong: Deeply moving, timeless, and grounding—puts everyday worries into immediate, peaceful perspective. Where it is weak: Heavy historical setting in the first half, and offers spiritual/mindset wisdom rather than clinical medical therapy advice."
+  },
+  {
+    "id": "a-random-walk-down-wall-street",
+    "day": 20,
+    "date": "2026-11-04",
+    "title": "A Random Walk Down Wall Street",
+    "subtitle": "The Best Investment Guide That Money Can Buy",
+    "author": "Burton G. Malkiel",
+    "category": "Finance",
+    "year": 1973,
+    "readingTimeMin": 9,
+    "qualificationRationale": "Written by a Princeton economist over 50 years ago and still updated today; gives regular savers rock-solid proof that low-fee index funds beat noisy stock picking.",
+    "thesis": "Trying to guess which hot stock will win next month is mostly luck—everyday people build far more wealth by buying low-cost, broad index funds regularly and leaving them alone for years.",
+    "conflictNote": "A few famous active fund managers beat the market occasionally, yet decades of hard data prove over 85% of high-fee stock pickers fall behind simple index funds over 10–15 years.",
+    "sourcesChecked": [
+      "Princeton University Press & W.W. Norton",
+      "SPIVA Index vs. Active Scorecard",
+      "Vanguard Long-Term Investing Research"
+    ],
+    "structure": [
+      {
+        "partNumber": 1,
+        "partTitle": "Why Guessing Next Week's Stocks Fails",
+        "keyIdea": "Millions of smart analysts watch the news every second, so as soon as good news appears about a company, stock prices already jump immediately. That means tomorrow's price swings depend mostly on unpredictable surprises—like a 'random walk'—so high-paid Wall Street experts paying themselves big fees usually fail to beat a blindfolded monkey throwing darts at stock pages.",
+        "realLifeExample": "Paying a friend 2% every year to pick winning lottery or horse-race tickets sounds fancy, yet over 10 years their fees eat up your profits.",
+        "whyItMatters": "Frees regular savers from wasting hours watching confusing stock charts or paying expensive financial fees."
+      },
+      {
+        "partNumber": 2,
+        "partTitle": "The Magic of Low-Cost Index Funds",
+        "keyIdea": "Instead of betting your savings on 2 or 3 lucky stocks, an 'Index Fund' lets you own tiny pieces of hundreds or thousands of major companies all at once—for a tiny fee (often less than $5 per $10,000 invested per year). If one company goes broke, dozens of growing companies quietly lift your whole basket up.",
+        "realLifeExample": "Rather than trying to guess which single apple tastes sweetest, buying the whole orchard basket ensures you share in the entire harvest safely.",
+        "whyItMatters": "Simple index investing quietly beats roughly 85% to 90% of expensive professional funds over 15 years."
+      },
+      {
+        "partNumber": 3,
+        "partTitle": "Dollar-Cost Averaging: Invest Rain or Shine",
+        "keyIdea": "Instead of trying to wait for the 'perfect day' to invest a lump sum, put a steady fixed amount into your index fund every single month automatically. When markets feel expensive, your money buys fewer shares; when markets drop and feel scary, your same dollar amount automatically buys MORE shares on sale!",
+        "realLifeExample": "Setting up $200 automatically every payday regardless of scary news headlines removes emotional stress and turns market dips into bonus discounts.",
+        "whyItMatters": "Turns patience and automation into your biggest edge so you never freeze up waiting for the 'right time.'"
+      },
+      {
+        "partNumber": 4,
+        "partTitle": "Match Your Risk to Your Age & Sleep Well",
+        "keyIdea": "Young workers with 30 years until retirement can keep mostly stocks because they have decades to ride out market drops. As you get closer to needing the money (or retiring), slowly mix in more safe bonds and cash so a sudden market slump never wrecks your upcoming bills.",
+        "realLifeExample": "Someone age 25 saving for retirement might keep 85%–90% in broad stock index funds, while someone retiring next year keeps several years of living cash safely in bonds or savings.",
+        "whyItMatters": "Keeps your investing plan safe enough that you never panic and sell during downturns."
+      }
+    ],
+    "keyInsights": [
+      "Low-cost broad index funds beat most high-fee actively managed funds over 10 to 20 years.",
+      "Beware high investment fees—even an extra 1%–2% annual fee quietly steals a huge chunk of your retirement over decades.",
+      "Do not chase hot tips, crypto fads, or flashy stock charts—boring steady saving wins.",
+      "Invest automatically every month (Dollar-Cost Averaging) so market dips actually work in your favor.",
+      "Adjust how much safe cash/bonds you hold as your life stage and upcoming bills change."
+    ],
+    "dailyImplementation": [
+      "Check the yearly 'expense ratio' fee on any investment or retirement fund you own—aim for tiny fees (under 0.10%–0.20% for broad index funds).",
+      "Automate a fixed monthly contribution into a diversified broad index fund so you never have to guess market timing.",
+      "Avoid putting money you will need within the next 3–5 years into volatile stocks—keep near-term cash safe.",
+      "Unfollow 'hot stock pick' hype accounts that push daily trading or fast riches.",
+      "Check your long-term savings once or twice a year to gently rebalance, then get back to enjoying life."
+    ],
+    "strengthWeakness": "Where it is strong: Decades of bulletproof proof that turns confusing Wall Street jargon into a calm, simple 20-minute-a-year saving plan. Where it is weak: Some early chapters dive into old Wall Street history and pricing formulas, though the core action steps remain simple."
+  }
+]

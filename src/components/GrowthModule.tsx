@@ -33,7 +33,7 @@ function parseLocalDay(date: Date): Date {
 }
 
 export const GrowthModule: React.FC<GrowthModuleProps> = ({ readStatusMap }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   const completedCount = useMemo(() => {
     return Object.values(readStatusMap).filter((r) => r.read).length;

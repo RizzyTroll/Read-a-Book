@@ -1,6 +1,7 @@
 import React from 'react';
-import { BookOpen, Search, PanelRight, X } from 'lucide-react';
+import { BookOpen, Search, PanelRight, X, User as UserIcon } from 'lucide-react';
 import { ReaderThemeClasses } from '../utils/readerPreferences';
+import { UserProfileData } from '../utils/firestoreSync';
 
 interface HeaderProps {
   onBackToLibrary?: () => void;
@@ -9,6 +10,9 @@ interface HeaderProps {
   isSidebarOpen: boolean;
   onToggleSidebar: () => void;
   readerTheme?: ReaderThemeClasses;
+  userProfile?: UserProfileData | null;
+  signedInEmail?: string | null;
+  onOpenAuth?: (mode: 'signup' | 'login' | 'claim') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -18,6 +22,9 @@ export const Header: React.FC<HeaderProps> = ({
   isSidebarOpen,
   onToggleSidebar,
   readerTheme,
+  userProfile,
+  signedInEmail,
+  onOpenAuth,
 }) => {
   return (
     <header
@@ -27,7 +34,7 @@ export const Header: React.FC<HeaderProps> = ({
           : 'border-black/[0.06] bg-[#F5F5F7]/85'
       }`}
     >
-      <div className="max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3">
         {/* Left: Clean Brand Wordmark */}
         <button
           type="button"
@@ -46,9 +53,9 @@ export const Header: React.FC<HeaderProps> = ({
           </span>
         </button>
 
-        {/* Right: Quick Search (desktop) + Right Sidebar Trigger */}
-        <div className="flex items-center gap-2.5 shrink-0">
-          <div className="relative hidden sm:block w-56 md:w-64">
+        {/* Right: Quick Search (desktop) + Account + Right Sidebar Trigger */}
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="relative hidden md:block w-52 lg:w-60">
             <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#86868B]" />
             <input
               type="text"
@@ -69,10 +76,52 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
 
+          {onOpenAuth && (
+            <>
+              {userProfile ? (
+                <button
+                  type="button"
+                  onClick={onToggleSidebar}
+                  className="min-h-[36px] px-2.5 rounded-xl bg-black/[0.05] hover:bg-black/[0.08] text-[#1D1D1F] text-[12px] font-semibold flex items-center gap-1.5 cursor-pointer whitespace-nowrap transition-colors"
+                  title={`Signed in as @${userProfile.username}`}
+                >
+                  <UserIcon className="w-3.5 h-3.5 text-[#007AFF]" />
+                  <span className="max-w-[90px] truncate">@{userProfile.username}</span>
+                </button>
+              ) : signedInEmail ? (
+                <button
+                  type="button"
+                  onClick={() => onOpenAuth('claim')}
+                  className="min-h-[36px] px-2.5 rounded-xl bg-[#FF9500]/15 hover:bg-[#FF9500]/25 text-[#9A4300] text-[12px] font-semibold flex items-center gap-1.5 cursor-pointer whitespace-nowrap transition-colors"
+                >
+                  <UserIcon className="w-3.5 h-3.5" />
+                  <span>Pick Username</span>
+                </button>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => onOpenAuth('login')}
+                    className="min-h-[36px] px-2.5 rounded-xl bg-black/[0.05] hover:bg-black/[0.09] text-[#1D1D1F] text-[12px] font-semibold cursor-pointer whitespace-nowrap transition-colors"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onOpenAuth('signup')}
+                    className="min-h-[36px] px-3 rounded-xl bg-[#007AFF] hover:bg-[#0066D6] text-white text-[12px] font-semibold cursor-pointer whitespace-nowrap transition-colors"
+                  >
+                    Sign Up
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
           <button
             type="button"
             onClick={onToggleSidebar}
-            className={`min-h-[40px] px-3 rounded-xl flex items-center gap-1.5 text-[13px] font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+            className={`min-h-[36px] px-3 rounded-xl flex items-center gap-1.5 text-[13px] font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
               isSidebarOpen
                 ? 'bg-[#007AFF]/12 text-[#007AFF]'
                 : 'bg-black/[0.05] hover:bg-black/[0.08] text-[#1D1D1F]'
