@@ -1,7 +1,8 @@
 import React from 'react';
-import { BookOpen, Search, PanelRight, X, User as UserIcon } from 'lucide-react';
+import { Search, PanelRight, X, User as UserIcon } from 'lucide-react';
 import { ReaderThemeClasses } from '../utils/readerPreferences';
 import { UserProfileData } from '../utils/firestoreSync';
+import { AppLogo } from './AppLogo';
 
 interface HeaderProps {
   onBackToLibrary?: () => void;
@@ -41,9 +42,7 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={onBackToLibrary}
           className="flex items-center gap-2.5 cursor-pointer group select-none whitespace-nowrap shrink-0"
         >
-          <div className="w-8 h-8 rounded-lg bg-[#1D1D1F] flex items-center justify-center text-white transition-colors group-hover:bg-[#007AFF]">
-            <BookOpen className="w-4 h-4" />
-          </div>
+          <AppLogo className="w-9 h-9 rounded-xl shadow-[0_1px_2px_rgba(0,0,0,0.06)] transition-transform duration-150 group-hover:scale-[1.04]" />
           <span
             className={`text-[17px] font-semibold tracking-tight ${
               readerTheme ? readerTheme.textPrimary : 'text-[#1D1D1F]'

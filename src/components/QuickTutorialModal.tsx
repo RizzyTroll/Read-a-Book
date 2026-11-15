@@ -11,6 +11,7 @@ import {
   ChevronRight,
   ChevronLeft,
 } from 'lucide-react';
+import { AppLogo } from './AppLogo';
 
 interface QuickTutorialModalProps {
   isOpen: boolean;
@@ -144,9 +145,13 @@ export const QuickTutorialModal: React.FC<QuickTutorialModalProps> = ({
         {/* Slide Content */}
         <div className="p-5 sm:p-6 overflow-y-auto space-y-5">
           <div className="bg-white rounded-2xl border border-black/[0.05] p-5 sm:p-6 space-y-4 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${step.accentBg}`}>
-              <Icon className="w-6 h-6" />
-            </div>
+            {stepIndex === 0 ? (
+              <AppLogo className="w-12 h-12 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.08)]" />
+            ) : (
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${step.accentBg}`}>
+                <Icon className="w-6 h-6" />
+              </div>
+            )}
 
             <div className="space-y-2">
               <h3 className="text-[20px] font-bold text-[#1D1D1F] tracking-tight leading-snug">

@@ -11,6 +11,7 @@ export default defineConfig(() => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
+        useCredentials: true,
         includeAssets: ['icon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'pwa-maskable-512x512.png'],
         manifest: {
           id: '/',
@@ -18,7 +19,7 @@ export default defineConfig(() => {
           short_name: 'Read a Book',
           description: 'A minimal, thoughtful library of book summaries and personal growth.',
           theme_color: '#F5F5F7',
-          background_color: '#F5F5F7',
+          background_color: '#FFFFFF',
           display: 'standalone',
           orientation: 'portrait-primary',
           start_url: '/',

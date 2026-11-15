@@ -10,8 +10,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
-  BookOpen,
 } from 'lucide-react';
+import { AppLogo } from './AppLogo';
 import {
   checkUsernameAvailable,
   claimUsernameForExistingUser,
@@ -213,9 +213,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {/* Header */}
         <div className="px-5 py-4 bg-white border-b border-black/[0.06] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#1D1D1F] text-white flex items-center justify-center">
-              <BookOpen className="w-4 h-4" />
-            </div>
+            <AppLogo className="w-9 h-9 rounded-xl shadow-[0_1px_2px_rgba(0,0,0,0.06)] shrink-0" />
             <div>
               <h3 className="text-[16px] font-semibold text-[#1D1D1F] leading-tight">
                 {mode === 'claim'

@@ -1,28 +1,52 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#1D1D1F" />
-      <stop offset="100%" stop-color="#0A0A0C" />
-    </linearGradient>
-    <linearGradient id="accent" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#3898FF" />
-      <stop offset="100%" stop-color="#007AFF" />
+    <linearGradient id="bluePage" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0A84FF" />
+      <stop offset="100%" stop-color="#0066D6" />
     </linearGradient>
   </defs>
-  <rect width="512" height="512" rx="112" fill="url(#bg)" />
-  <g transform="translate(116, 136)">
-    <!-- Left Page -->
-    <path d="M140 36 C105 14, 48 14, 10 30 C4 32, 0 38, 0 44 L0 218 C0 225, 7 230, 14 227 C52 212, 105 214, 140 236 Z" fill="#FFFFFF" />
-    <!-- Right Page -->
-    <path d="M140 36 C175 14, 232 14, 270 30 C276 32, 280 38, 280 44 L280 218 C280 225, 273 230, 266 227 C228 212, 175 214, 140 236 Z" fill="url(#accent)" />
-    <!-- Center Spine Divider -->
-    <line x1="140" y1="36" x2="140" y2="236" stroke="#1D1D1F" stroke-opacity="0.22" stroke-width="5" stroke-linecap="round" />
-    <!-- Subtle Page Lines -->
-    <line x1="34" y1="86" x2="108" y2="86" stroke="#1D1D1F" stroke-opacity="0.18" stroke-width="10" stroke-linecap="round" />
-    <line x1="34" y1="122" x2="108" y2="122" stroke="#1D1D1F" stroke-opacity="0.18" stroke-width="10" stroke-linecap="round" />
-    <line x1="34" y1="158" x2="90" y2="158" stroke="#1D1D1F" stroke-opacity="0.18" stroke-width="10" stroke-linecap="round" />
-    <line x1="172" y1="86" x2="246" y2="86" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="10" stroke-linecap="round" />
-    <line x1="172" y1="122" x2="246" y2="122" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="10" stroke-linecap="round" />
-    <line x1="172" y1="158" x2="226" y2="158" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="10" stroke-linecap="round" />
+
+  <!-- Crisp White Rounded-Square Background -->
+  <rect x="0" y="0" width="512" height="512" rx="112" fill="#FFFFFF" />
+  <rect x="3" y="3" width="506" height="506" rx="109" fill="none" stroke="#E5E5EA" stroke-width="6" />
+
+  <!-- Centered, Compact Open Book (plenty of breathing room inside safe zone) -->
+  <g>
+    <!-- Hardcover Book Base / Binding Cradle -->
+    <path
+      d="M126 190 L126 334 C126 340 131 344 137 342 C176 329 218 331 244 345 C249 351 263 351 268 345 C294 331 336 329 375 342 C381 344 386 340 386 334 L386 190 Z"
+      fill="#1D1D1F"
+    />
+
+    <!-- Left Page: Crisp White Half -->
+    <path
+      d="M256 184 C224 166 172 164 138 176 C133 178 130 182 130 188 L130 322 C130 327 135 330 140 328 C176 315 224 317 256 334 Z"
+      fill="#FFFFFF"
+      stroke="#1D1D1F"
+      stroke-width="6"
+      stroke-linejoin="round"
+    />
+
+    <!-- Right Page: Apple Blue Half -->
+    <path
+      d="M256 184 C288 166 340 164 374 176 C379 178 382 182 382 188 L382 322 C382 327 377 330 372 328 C336 315 288 317 256 334 Z"
+      fill="url(#bluePage)"
+      stroke="#0066D6"
+      stroke-width="6"
+      stroke-linejoin="round"
+    />
+
+    <!-- Center Spine Line -->
+    <line x1="256" y1="184" x2="256" y2="334" stroke="#1D1D1F" stroke-opacity="0.28" stroke-width="5" stroke-linecap="round" />
+
+    <!-- Subtle Text Lines on Left (White) Page -->
+    <line x1="158" y1="218" x2="226" y2="218" stroke="#8E8E93" stroke-width="8" stroke-linecap="round" />
+    <line x1="158" y1="246" x2="226" y2="246" stroke="#8E8E93" stroke-width="8" stroke-linecap="round" />
+    <line x1="158" y1="274" x2="206" y2="274" stroke="#8E8E93" stroke-width="8" stroke-linecap="round" />
+
+    <!-- Subtle Text Lines on Right (Blue) Page -->
+    <line x1="286" y1="218" x2="354" y2="218" stroke="#FFFFFF" stroke-opacity="0.88" stroke-width="8" stroke-linecap="round" />
+    <line x1="286" y1="246" x2="354" y2="246" stroke="#FFFFFF" stroke-opacity="0.88" stroke-width="8" stroke-linecap="round" />
+    <line x1="286" y1="274" x2="334" y2="274" stroke="#FFFFFF" stroke-opacity="0.88" stroke-width="8" stroke-linecap="round" />
   </g>
 </svg>
