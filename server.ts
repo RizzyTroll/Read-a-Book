@@ -1062,11 +1062,21 @@ async function startServer() {
       try {
         const result = await vite.transformRequest('/@vite/client');
         if (!result?.code) return next();
-        const patched = result.code.replace(
-          'transport.connect(createHMRHandler(handleMessage));',
-          '/* HMR disabled */'
-        );
+        const patched = result.code
+          .replace(
+            'transport.connect(createHMRHandler(handleMessage));',
+            '/* HMR disabled */'
+          )
+          .replace(
+            'throw new SendBeforeConnectError("send was called before connect")',
+            'return'
+          )
+          .replace(
+            'throw new SendBeforeConnectError("invoke was called before connect")',
+            'return'
+          );
         res.setHeader('Content-Type', 'application/javascript');
+        res.setHeader('Cache-Control', 'no-cache');
         return res.send(patched);
       } catch {
         return next();
