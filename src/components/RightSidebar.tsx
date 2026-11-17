@@ -29,7 +29,11 @@ interface RightSidebarProps {
   readStatusMap: ReadStatusMap;
   filterMode: LibraryFilter;
   onFilterChange: (filter: LibraryFilter) => void;
-  onAutoAddBooks: (count: number, specificTitle?: string) => Promise<void>;
+  onAutoAddBooks: (
+    count: number,
+    specificTitle?: string,
+    specificAuthor?: string
+  ) => Promise<void>;
   isAddingBooks: boolean;
   userProfile: UserProfileData | null;
   signedInEmail?: string | null;
@@ -60,12 +64,18 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   const [bookCountToAdd, setBookCountToAdd] = useState<number>(1);
   const [showSpecificInput, setShowSpecificInput] = useState(false);
   const [specificTitleInput, setSpecificTitleInput] = useState('');
+  const [specificAuthorInput, setSpecificAuthorInput] = useState('');
 
   const readCount = useMemo(() => {
     return Object.values(readStatusMap).filter((r) => r.read).length;
   }, [readStatusMap]);
 
   const progressPct = books.length > 0 ? Math.round((readCount / books.length) * 100) : 0;
+
+  const updateCount = (rawValue: number) => {
+    const safe = Math.max(1, Math.min(5, Math.floor(rawValue) || 1));
+    setBookCountToAdd(safe);
+  };
 
   const handleQuickAdd = async () => {
     if (isAddingBooks) return;
@@ -75,9 +85,13 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   const handleSpecificAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!specificTitleInput.trim() || isAddingBooks) return;
-    await onAutoAddBooks(1, specificTitleInput.trim());
+    await onAutoAddBooks(
+      1,
+      specificTitleInput.trim(),
+      specificAuthorInput.trim() || undefined
+    );
     setSpecificTitleInput('');
-    setShowSpecificInput(false);
+    setSpecificAuthorInput('');
   };
 
   if (!isOpen) return null;
@@ -271,14 +285,14 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
             Add a Book
           </h3>
           <div className="bg-white rounded-2xl border border-black/[0.05] divide-y divide-black/[0.06] overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
-            {/* Quantity Segmented Selector */}
+            {/* Quantity Selector (up to 5 at a time for quality) */}
             <div className="p-3.5 space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <span className="text-[14px] font-medium text-[#1D1D1F]">
                   Number of books
                 </span>
-                <span className="text-[13px] text-[#6E6E73] tabular-nums">
-                  {bookCountToAdd}
+                <span className="text-[12px] text-[#6E6E73] tabular-nums">
+                  {bookCountToAdd} of 5 max
                 </span>
               </div>
 
@@ -287,7 +301,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                   <button
                     key={num}
                     type="button"
-                    onClick={() => setBookCountToAdd(num)}
+                    onClick={() => updateCount(num)}
                     className={`h-8 rounded-lg text-[13px] font-semibold tabular-nums transition-all cursor-pointer ${
                       bookCountToAdd === num
                         ? 'bg-white text-[#1D1D1F] shadow-xs'
@@ -328,7 +342,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                 onClick={() => setShowSpecificInput((prev) => !prev)}
                 className="w-full px-3.5 min-h-[44px] flex items-center justify-between text-[14px] font-medium text-[#007AFF] hover:bg-[#F5F5F7] transition-colors cursor-pointer"
               >
-                <span>Add a specific book</span>
+                <span>Add any specific book</span>
                 <ChevronRight
                   className={`w-4 h-4 text-[#C7C7CC] transition-transform ${
                     showSpecificInput ? 'rotate-90' : ''
@@ -339,30 +353,41 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
               {showSpecificInput && (
                 <form
                   onSubmit={handleSpecificAdd}
-                  className="px-3.5 pb-3.5 pt-1 space-y-2.5 bg-[#FAFAFC]"
+                  className="px-3.5 pb-3.5 pt-1 space-y-2 bg-[#FAFAFC]"
                 >
                   <input
                     type="text"
-                    placeholder="Title and author..."
+                    placeholder="Book title (e.g. Zero to One)"
                     value={specificTitleInput}
                     onChange={(e) => setSpecificTitleInput(e.target.value)}
                     autoFocus
                     className="w-full h-10 bg-white border border-black/[0.1] rounded-xl px-3 text-[13px] text-[#1D1D1F] placeholder-[#86868B] focus:outline-none focus:border-[#007AFF]"
                   />
-                  <div className="flex items-center justify-end gap-2">
+                  <input
+                    type="text"
+                    placeholder="Author (optional)"
+                    value={specificAuthorInput}
+                    onChange={(e) => setSpecificAuthorInput(e.target.value)}
+                    className="w-full h-9 bg-white border border-black/[0.1] rounded-xl px-3 text-[13px] text-[#1D1D1F] placeholder-[#86868B] focus:outline-none focus:border-[#007AFF]"
+                  />
+                  <div className="flex items-center justify-end gap-2 pt-0.5">
                     <button
                       type="button"
-                      onClick={() => setShowSpecificInput(false)}
+                      onClick={() => {
+                        setShowSpecificInput(false);
+                        setSpecificTitleInput('');
+                        setSpecificAuthorInput('');
+                      }}
                       className="px-3 py-1.5 rounded-lg text-[13px] font-medium text-[#6E6E73] hover:text-[#1D1D1F] cursor-pointer"
                     >
-                      Cancel
+                      Close
                     </button>
                     <button
                       type="submit"
                       disabled={!specificTitleInput.trim() || isAddingBooks}
                       className="px-4 py-1.5 rounded-lg bg-[#007AFF] hover:bg-[#0066D6] disabled:opacity-40 text-white text-[13px] font-semibold cursor-pointer"
                     >
-                      {isAddingBooks ? 'Adding...' : 'Add'}
+                      {isAddingBooks ? 'Adding...' : 'Add Book'}
                     </button>
                   </div>
                 </form>

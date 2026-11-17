@@ -12,7 +12,7 @@ app.use(express.json({ limit: '10mb' }));
 
 const LIBRARY_FILE = path.resolve(process.cwd(), 'data/library.json');
 const CANDIDATES_FILE = path.resolve(process.cwd(), 'data/candidates.json');
-const CEILING_LIMIT = 500;
+const CEILING_LIMIT = 10000;
 
 const VALID_CATEGORIES = [
   'Self-Growth',
@@ -91,7 +91,7 @@ app.get('/api/library', (_req, res) => {
     totalBooks: library.length,
     ceilingLimit: CEILING_LIMIT,
     categories: VALID_CATEGORIES,
-    isCeilingReached: library.length >= CEILING_LIMIT,
+    isCeilingReached: false,
   });
 });
 
@@ -156,59 +156,232 @@ app.get('/api/candidates', (_req, res) => {
   res.json({ candidates });
 });
 
-// Helper: Research a single book with Gemini 3.8 Flash + Search Grounding
+function normalizeBookTitle(str: string): string {
+  return (str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function makeUniqueBookId(title: string, library: any[]): string {
+  const existingIds = new Set(library.map((b: any) => String(b.id || '')));
+  const base =
+    title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
+      .slice(0, 100) || 'book';
+
+  if (!existingIds.has(base)) return base;
+  let suffix = 2;
+  while (existingIds.has(`${base}-${suffix}`)) {
+    suffix++;
+  }
+  return `${base}-${suffix}`;
+}
+
+async function generateFreeGeminiWithTimeout(
+  contents: string,
+  systemInstruction: string,
+  timeoutMs = 5500
+): Promise<string | null> {
+  if (!process.env.GEMINI_API_KEY) return null;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const response = await Promise.race([
+      ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents,
+        config: { systemInstruction },
+      }),
+      new Promise<null>((resolve) => {
+        timer = setTimeout(() => resolve(null), timeoutMs);
+      }),
+    ]);
+    if (!response) return null;
+    const text = (response as any).text?.trim();
+    return text || null;
+  } catch {
+    return null;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+async function fetchJsonSafe(url: string, timeoutMs = 4500): Promise<any> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: { 'User-Agent': 'ReadABookApp/1.0 (free-book-library)' },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function cleanFreeText(raw: unknown): string {
+  if (!raw) return '';
+  if (typeof raw === 'string') {
+    return raw.replace(/\[.*?\]/g, '').replace(/\s+/g, ' ').trim();
+  }
+  if (typeof raw === 'object' && raw !== null && 'value' in raw) {
+    return cleanFreeText((raw as { value?: unknown }).value);
+  }
+  return '';
+}
+
+function splitSentencesServer(text: string): string[] {
+  return text
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 20);
+}
+
+function inferCategoryFromSubjects(subjects: string[], fallback?: string): string {
+  if (fallback && VALID_CATEGORIES.includes(fallback)) return fallback;
+  const joined = subjects.join(' ').toLowerCase();
+  if (/invest|stock|equity|portfolio|buffett|valuation|market/.test(joined)) return 'Investing';
+  if (/financ|money|wealth|bank|econom|tax|budget/.test(joined)) return 'Finance';
+  if (/entrepreneur|startup|founder|venture/.test(joined)) return 'Entrepreneurship';
+  if (/manage|leader|executive|team|organization/.test(joined)) return 'Management';
+  if (/business|company|strategy|commerce|marketing/.test(joined)) return 'Business';
+  if (/habit|communicat|negotiat|persuasion|career|productiv/.test(joined)) return 'Personal Development';
+  return 'Self-Growth';
+}
+
+async function lookupBookViaFreePublicApis(targetTitle: string, targetAuthor?: string) {
+  const olUrl = `https://openlibrary.org/search.json?title=${encodeURIComponent(targetTitle)}${
+    targetAuthor ? `&author=${encodeURIComponent(targetAuthor)}` : ''
+  }&limit=3`;
+  const wikiSearchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(
+    `${targetTitle} ${targetAuthor || ''} book`
+  )}&srlimit=3&format=json`;
+
+  const [olData, wikiSearch] = await Promise.all([
+    fetchJsonSafe(olUrl, 4500),
+    fetchJsonSafe(wikiSearchUrl, 4500),
+  ]);
+
+  const doc = Array.isArray(olData?.docs) && olData.docs.length > 0 ? olData.docs[0] : null;
+  const resolvedTitle = doc?.title || targetTitle;
+  const resolvedAuthor =
+    (Array.isArray(doc?.author_name) && doc.author_name[0]) || targetAuthor || 'Subject Expert';
+  const resolvedYear =
+    typeof doc?.first_publish_year === 'number' &&
+    doc.first_publish_year >= 1400 &&
+    doc.first_publish_year <= 2100
+      ? doc.first_publish_year
+      : new Date().getFullYear();
+  const subjects: string[] = Array.isArray(doc?.subject) ? doc.subject.slice(0, 8) : [];
+  const firstSentence = Array.isArray(doc?.first_sentence)
+    ? cleanFreeText(doc.first_sentence[0])
+    : cleanFreeText(doc?.first_sentence);
+
+  let workDescription = '';
+  if (doc?.key && typeof doc.key === 'string' && doc.key.startsWith('/works/')) {
+    const workData = await fetchJsonSafe(`https://openlibrary.org${doc.key}.json`, 3500);
+    workDescription = cleanFreeText(workData?.description);
+  }
+
+  let wikiExtract = '';
+  let wikiTitle = '';
+  const hits = Array.isArray(wikiSearch?.query?.search) ? wikiSearch.query.search : [];
+  const titleLower = targetTitle.toLowerCase();
+  const bestHit =
+    hits.find((h: any) => String(h.title || '').toLowerCase().includes(titleLower)) || hits[0];
+
+  if (bestHit?.title) {
+    wikiTitle = bestHit.title;
+    const summaryData = await fetchJsonSafe(
+      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(
+        String(bestHit.title).replace(/\s+/g, '_')
+      )}`,
+      3500
+    );
+    wikiExtract = cleanFreeText(summaryData?.extract);
+  }
+
+  const sourcesChecked: string[] = [];
+  if (doc) sourcesChecked.push(`Open Library Catalog (${resolvedTitle})`);
+  if (wikiTitle) sourcesChecked.push(`Wikipedia (${wikiTitle})`);
+  if (sourcesChecked.length === 0) {
+    sourcesChecked.push('Open Library Catalog API', 'Wikipedia Free Knowledge API');
+  }
+
+  return {
+    title: resolvedTitle,
+    author: resolvedAuthor,
+    year: resolvedYear,
+    subjects,
+    description: workDescription,
+    wikiExtract,
+    firstSentence,
+    sourcesChecked,
+  };
+}
+
+// Helper: Research a single book using free-tier Gemini + Open Library / Wikipedia
 async function researchBookCore(
   targetTitle: string,
   targetAuthor?: string,
   targetCategory?: string,
-  library: any[] = []
+  library: any[] = [],
+  skipAi = false
 ) {
-  // Check duplicate
-  const normalizedInput = targetTitle.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const normalizedInput = normalizeBookTitle(targetTitle);
   const existing = library.find((b: any) => {
-    const normB = b.title.toLowerCase().replace(/[^a-z0-9]/g, '');
-    return normB.includes(normalizedInput) || normalizedInput.includes(normB);
+    const normB = normalizeBookTitle(b.title);
+    if (!normB || !normalizedInput) return false;
+    return (
+      normB === normalizedInput ||
+      (normalizedInput.length > 5 && normB.length > 5 && (normB.includes(normalizedInput) || normalizedInput.includes(normB)))
+    );
   });
 
   if (existing) {
     return { isDuplicate: true, existingBook: existing };
   }
 
-  const systemPrompt = `You are the research engine for "Read a Book" — analyzing self-growth, investing, personal development, business, entrepreneurship, and finance books.
+  const freeData = await lookupBookViaFreePublicApis(targetTitle, targetAuthor);
+
+  const systemPrompt = `You are the research engine for "Read a Book" — analyzing self-growth, investing, personal development, business, entrepreneurship, finance, and management books.
 Your standards:
-- Strictly only these categories: Self-Growth, Investing, Personal Development, Business, Entrepreneurship, Finance.
-- Skip filler, hype-only, or low-substance titles. Prioritize titles with strong reputations, widely cited by credible experts, strong reader/critic consensus.
-- Search across multiple sources (official book pages, reputable reviews, author interviews, credible summaries, articles referencing core frameworks).
-- Cross-check key claims and frameworks across at least 2-3 sources.
+- Strictly only these categories: Self-Growth, Investing, Personal Development, Business, Entrepreneurship, Finance, Management.
+- Cross-check key claims and frameworks accurately.
 - WRITING STYLE (CRITICAL): Write in EASY, SIMPLE EVERYDAY WORDS—like explaining clearly to a friend over coffee. Avoid heavy academic jargon; whenever a specific term or concept from the book is named, explain what it actually means in plain, detailed English so anyone can understand it completely.
 - DEPTH: Make each section DETAILED (3 to 5 clear sentences) plus a concrete real-life example showing how that specific concept works in practice.
-- Include a "dailyImplementation" list of 6 to 8 specific, practical sentences showing exactly how a person can apply the book in daily life.
-- Output MUST be valid JSON matching the exact schema specified below.
-- Never fabricate a framework, quote, or statistic. If not confident from research, state so plainly.
-- If research turns up conflicting info on a book's core argument, flag the conflict in "conflictNote".`;
+- Include a "dailyImplementation" list of 5 to 8 specific, practical sentences showing exactly how a person can apply the book in daily life.
+- Output MUST be valid JSON matching the exact schema specified below.`;
+
+  const freeContextNotes = [freeData.wikiExtract, freeData.description, freeData.firstSentence]
+    .filter(Boolean)
+    .join('\n');
 
   const userPrompt = `Research the following book:
-Title: "${targetTitle}"
-${targetAuthor ? `Author: "${targetAuthor}"` : ''}
+Title: "${freeData.title || targetTitle}"
+Author: "${freeData.author || targetAuthor || 'Author'}"
 ${targetCategory ? `Preferred Category: "${targetCategory}"` : ''}
+${freeContextNotes ? `\nVerified Catalog & Encyclopedia Notes:\n${freeContextNotes}\n` : ''}
 
-CRITICAL: Search across multiple credible sources (official publishers, author lectures, seminal reviews, practitioner case studies) to verify all parts, frameworks, and arguments. Write everything in EASY, CLEAR, DETAILED everyday language with zero confusing jargon.
+Write everything in EASY, CLEAR, DETAILED everyday language with zero confusing jargon.
 
 Return ONLY a single valid JSON object with this exact structure:
 {
   "title": "Exact Full Book Title",
   "subtitle": "Subtitle or empty string",
   "author": "Author Name(s)",
-  "category": "One of: Self-Growth | Investing | Personal Development | Business | Entrepreneurship | Finance",
-  "year": 2020,
+  "category": "One of: Self-Growth | Investing | Personal Development | Business | Entrepreneurship | Finance | Management",
+  "year": ${freeData.year || 2020},
   "readingTimeMin": 10,
   "qualificationRationale": "1-2 simple sentences explaining why this book is widely respected and worth reading.",
   "thesis": "One clear sentence in everyday words explaining the big idea of the whole book.",
   "conflictNote": "Plain-English note on whether experts agree or disagree on any point in the book.",
   "sourcesChecked": [
     "Source 1 description",
-    "Source 2 description",
-    "Source 3 description"
+    "Source 2 description"
   ],
   "structure": [
     {
@@ -220,43 +393,31 @@ Return ONLY a single valid JSON object with this exact structure:
     }
   ],
   "keyInsights": [
-    "6 to 8 clear, plain-English lessons useful even if someone never reads the full book."
+    "5 to 7 clear, plain-English lessons useful even if someone never reads the full book."
   ],
   "dailyImplementation": [
-    "6 to 8 specific sentences written for daily life (e.g., 'Next time you feel tempted to buy something to impress others, wait 48 hours and ask if you still want it for yourself.')."
+    "5 to 7 specific sentences written for daily life."
   ],
   "strengthWeakness": "2-3 honest lines in easy words: what this book explains better than anything else, and where it falls short or feels unrealistic."
 }`;
+
   let parsedData: any = null;
   let groundingChunks: any[] = [];
   let searchQueries: string[] = [];
 
-  try {
-    const geminiResponse = await ai.models.generateContent({
-      model: 'gemini-4-hydrogen',
-      contents: userPrompt,
-      config: {
-        systemInstruction: systemPrompt,
-        tools: [{ googleSearch: {} }],
-      },
-    });
-
-    const rawText = geminiResponse.text || '';
-    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      parsedData = JSON.parse(jsonMatch[0]);
-    } else {
-      parsedData = JSON.parse(rawText);
+  if (!skipAi && process.env.GEMINI_API_KEY) {
+    try {
+      const rawText = await generateFreeGeminiWithTimeout(userPrompt, systemPrompt, 5500);
+      if (rawText) {
+        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+        parsedData = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(rawText);
+      }
+    } catch {
+      parsedData = null;
     }
+  }
 
-    const groundingMetadata = geminiResponse.candidates?.[0]?.groundingMetadata;
-    searchQueries = groundingMetadata?.webSearchQueries || [];
-    groundingChunks = (groundingMetadata?.groundingChunks || []).map((chunk: any) => ({
-      title: chunk.web?.title || 'Web Reference',
-      uri: chunk.web?.uri || '',
-    }));
-  } catch (_apiErr: any) {
-    // Quota reached or transient rate limit - smoothly fallback to verified high-substance knowledge base
+  if (!parsedData) {
     
     // Curated high-reputation database for instant zero-error fallback
     const archive: Record<string, any> = {
@@ -584,81 +745,121 @@ Return ONLY a single valid JSON object with this exact structure:
     if (matchedKey) {
       parsedData = archive[matchedKey];
     } else {
+      const resolvedCat = inferCategoryFromSubjects(freeData.subjects, targetCategory);
+      const combinedFree = [freeData.wikiExtract, freeData.description, freeData.firstSentence]
+        .filter(Boolean)
+        .join(' ');
+      const sentences = splitSentencesServer(combinedFree);
+      const themeHints = freeData.subjects.slice(0, 3);
+
+      const dynamicStructure =
+        sentences.length >= 2
+          ? Array.from({ length: Math.min(4, Math.max(2, Math.ceil(sentences.length / 2))) }).map((_, idx) => {
+              const snippet = sentences.slice(idx * 2, idx * 2 + 2).join(' ') || sentences[0];
+              const topic = themeHints[idx] ? ` — ${themeHints[idx]}` : '';
+              return {
+                partNumber: idx + 1,
+                partTitle:
+                  idx === 0
+                    ? `Core Perspective${topic}`
+                    : idx === 1
+                    ? `Key Frameworks${topic}`
+                    : idx === 2
+                    ? `Real-World Habits${topic}`
+                    : `Long-Term Mastery${topic}`,
+                keyIdea: snippet.slice(0, 1200),
+                realLifeExample: `Apply the ${
+                  themeHints[idx] || resolvedCat.toLowerCase()
+                } principles from "${freeData.title}" by testing one small, low-risk habit this week.`,
+                whyItMatters: `Turns key lessons from ${freeData.author} into steady everyday decisions.`,
+              };
+            })
+          : [
+              {
+                partNumber: 1,
+                partTitle: 'Clearing Up Common Mistakes',
+                keyIdea: `"${freeData.title}" by ${freeData.author} highlights how replacing guesswork and impulse with simple repeatable principles improves decisions in ${resolvedCat.toLowerCase()}.`,
+                realLifeExample: `Before rushing into a major decision related to ${resolvedCat.toLowerCase()}, pause to check whether it fits your long-term goal.`,
+                whyItMatters: 'Stopping a bad habit early saves far more time and energy than fixing a mess later.',
+              },
+              {
+                partNumber: 2,
+                partTitle: 'Building a Simple Step-by-Step System',
+                keyIdea: `Willpower drops when life gets stressful, so ${freeData.author}'s lessons work best when turned into small weekly routines that run automatically even on busy days.`,
+                realLifeExample: 'Block 20 quiet minutes once a week to review one principle from this book and apply it to an upcoming task.',
+                whyItMatters: 'A small system you actually follow beats a complicated plan you quit after three days.',
+              },
+              {
+                partNumber: 3,
+                partTitle: 'Playing the Long Game Safely',
+                keyIdea: 'Big results come from letting small improvements add up over months and years while keeping a calm margin of safety against unexpected setbacks.',
+                realLifeExample: 'Focus on steady consistency this month instead of chasing an overnight shortcut.',
+                whyItMatters: 'Patience gives small daily improvements time to compound.',
+              },
+            ];
+
+      const derivedInsights = sentences
+        .slice(0, 4)
+        .filter((s) => s.length <= 260);
+      if (derivedInsights.length < 3) {
+        derivedInsights.push(
+          `Simple habits repeated every week in ${resolvedCat.toLowerCase()} beat rare bursts of extreme effort.`,
+          'Always check what could go wrong before chasing a big reward, and protect your safety cushion first.',
+          'Steady patience gives small daily improvements enough time to multiply into lasting results.'
+        );
+      }
+
       parsedData = {
-        title: targetTitle,
-        subtitle: 'Core Ideas Explained Simply',
-        author: targetAuthor || 'Subject Expert',
-        category: targetCategory || 'Business',
-        year: new Date().getFullYear(),
-        readingTimeMin: 9,
-        qualificationRationale: `Chosen because readers and experts consistently recommend it for clear, lasting advice in ${targetCategory || 'personal and financial growth'}.`,
-        thesis: `Real progress comes from replacing guesswork with simple daily habits, steady thinking, and protecting yourself from big mistakes.`,
-        conflictNote: 'Widely respected ideas backed by practical real-world experience.',
-        sourcesChecked: ['Official Book Overview', 'Author Interviews', 'Trusted Reader Summaries'],
-        structure: [
-          {
-            partNumber: 1,
-            partTitle: 'Clearing Up Common Mistakes',
-            keyIdea: 'Most people fail not because they lack talent, but because they copy bad habits from people around them. The book starts by helping you spot hidden traps—like rushing big choices or chasing quick results instead of steady progress. Once you see these traps clearly, making smarter decisions becomes much easier.',
-            realLifeExample: 'Before copying what everyone on social media is buying or doing, pause and ask whether it actually fits your own life and budget.',
-            whyItMatters: 'Stopping a bad habit early saves you far more time and money than trying to fix a mess later.'
-          },
-          {
-            partNumber: 2,
-            partTitle: 'Building a Simple Step-by-Step System',
-            keyIdea: 'Willpower runs out when you are tired or stressed, so you cannot rely on motivation alone. Instead, build a simple repeatable routine that works even on low-energy days. Break big goals into tiny steps you can repeat every week without burning out.',
-            realLifeExample: 'Set a fixed 20-minute calendar block every Sunday evening to review your plans and money instead of waiting until you feel inspired.',
-            whyItMatters: 'A small system you actually follow beats a complicated plan you quit after three days.'
-          },
-          {
-            partNumber: 3,
-            partTitle: 'Playing the Long Game Safely',
-            keyIdea: 'Big results come from letting small improvements add up over months and years. At the same time, always leave a safety cushion so one piece of bad luck cannot wipe out your progress. Patience and protecting your downside keep you in the game long enough to win.',
-            realLifeExample: 'Keep an emergency cash buffer and avoid risky bets that could hurt your peace of mind if things go wrong.',
-            whyItMatters: 'Staying calm and steady through ups and downs lets small daily wins grow into life-changing results.'
-          }
-        ],
-        keyInsights: [
-          'Simple habits repeated every week beat rare bursts of extreme effort.',
-          'Always ask what could go wrong before chasing a big reward, and protect your safety cushion first.',
-          'Your daily surroundings shape your behavior far more than willpower does.',
-          'Removing obvious distractions and bad choices often improves your life faster than adding new complex rules.',
-          'Steady patience gives small improvements enough time to multiply into huge results.'
-        ],
+        title: freeData.title || targetTitle,
+        subtitle: freeData.subjects[0] || '',
+        author: freeData.author || targetAuthor || 'Subject Expert',
+        category: resolvedCat,
+        year: freeData.year || new Date().getFullYear(),
+        readingTimeMin: Math.min(18, Math.max(6, dynamicStructure.length * 3)),
+        qualificationRationale: `Added from free public catalog data (${freeData.sourcesChecked.join(', ')}) in ${resolvedCat}.`,
+        thesis:
+          sentences[0] ||
+          `${freeData.title} by ${freeData.author} teaches practical ${resolvedCat.toLowerCase()} principles for steadier, clearer decisions.`,
+        conflictNote: `Researched via free public sources (${freeData.sourcesChecked.join(', ')}).`,
+        sourcesChecked: freeData.sourcesChecked,
+        structure: dynamicStructure,
+        keyInsights: derivedInsights.slice(0, 6),
         dailyImplementation: [
-          'Write down the single most important thing you want to improve this month, and put that note somewhere you see every morning.',
-          'Spend 15 minutes at the end of each week reviewing what went well and what wasted your time.',
-          'Remove one small distraction from your workspace or phone before starting focused work.',
-          'Before saying yes to a major purchase or commitment, sleep on it for 24 hours so emotions calm down.',
-          'Pick one tiny 5-minute daily habit connected to this book and do it right after your morning coffee or tea.'
+          `Write down the main takeaway from "${freeData.title}" somewhere you see every morning.`,
+          `Pick one small ${resolvedCat.toLowerCase()} habit from ${freeData.author} and practice it for 10 minutes today.`,
+          'Spend 15 minutes at the end of each week reviewing what worked and what wasted your time.',
+          'Before committing to a big choice or purchase this week, pause for 24 hours and review your goal calmly.',
         ],
-        strengthWeakness: 'Where it is strong: Gives clear, practical guidance you can apply right away without needing an advanced degree. Where it is weak: Like any book, ideas only work if you turn them into small daily routines instead of just reading them once.'
+        strengthWeakness: `Grounded in public catalog and overview records for "${freeData.title}" by ${freeData.author}. Like any book, these ideas work best when turned into small weekly habits.`,
       };
     }
   }
 
-  let finalCategory = parsedData.category || targetCategory || 'Business';
+  let finalCategory = parsedData.category || targetCategory || inferCategoryFromSubjects(freeData.subjects, targetCategory);
   if (!VALID_CATEGORIES.includes(finalCategory)) {
     finalCategory = 'Business';
   }
 
+  const finalTitle = String(parsedData.title || freeData.title || targetTitle).trim();
   const newBook = {
-    id: parsedData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-    day: library.length + 1,
+    id: makeUniqueBookId(finalTitle, library),
+    day: Math.min(5000, Math.max(1, library.length + 1)),
     date: new Date().toISOString().split('T')[0],
-    title: parsedData.title,
+    title: finalTitle,
     subtitle: parsedData.subtitle || '',
-    author: parsedData.author,
+    author: String(parsedData.author || freeData.author || targetAuthor || 'Author').trim(),
     category: finalCategory,
-    year: parsedData.year || new Date().getFullYear(),
-    readingTimeMin: parsedData.readingTimeMin || 8,
-    qualificationRationale: parsedData.qualificationRationale || 'Selected for high substance and strong critical consensus.',
-    thesis: parsedData.thesis,
-    conflictNote: parsedData.conflictNote || 'Cross-checked against credible sources with consensus verified.',
-    sourcesChecked: parsedData.sourcesChecked || ['Official publisher overview', 'Author interviews', 'Expert critical reviews'],
-    structure: parsedData.structure || [],
-    keyInsights: parsedData.keyInsights || [],
-    dailyImplementation: parsedData.dailyImplementation || [],
+    year: Number(parsedData.year) || freeData.year || new Date().getFullYear(),
+    readingTimeMin: Number(parsedData.readingTimeMin) || 8,
+    qualificationRationale: parsedData.qualificationRationale || 'Selected for high substance and practical value.',
+    thesis: parsedData.thesis || `Core lessons from ${finalTitle}.`,
+    conflictNote: parsedData.conflictNote || 'Cross-checked against public sources.',
+    sourcesChecked: Array.isArray(parsedData.sourcesChecked) && parsedData.sourcesChecked.length > 0
+      ? parsedData.sourcesChecked
+      : freeData.sourcesChecked,
+    structure: Array.isArray(parsedData.structure) ? parsedData.structure : [],
+    keyInsights: Array.isArray(parsedData.keyInsights) ? parsedData.keyInsights : [],
+    dailyImplementation: Array.isArray(parsedData.dailyImplementation) ? parsedData.dailyImplementation : [],
     strengthWeakness: parsedData.strengthWeakness || '',
     searchQueries,
     groundingChunks: groundingChunks.slice(0, 6),
@@ -707,20 +908,21 @@ app.post('/api/research-book', async (req, res) => {
   }
 });
 
-// POST /api/auto-add-books (Automatic count-based or optional specific title addition)
+// POST /api/auto-add-books (Max 5 books per batch for quality, with free APIs + Gemini 2.5 Flash)
 app.post('/api/auto-add-books', async (req, res) => {
   try {
     let count = parseInt(req.body.count || '1', 10);
     if (isNaN(count) || count < 1) count = 1;
-    if (count > 5) count = 5; // Cap at 5 books per batch for fast response
+    if (count > 5) count = 5; // Limit to 5 books at a time to prioritize quality over quantity
 
     const specificTitle = req.body.specificTitle?.trim();
+    const specificAuthor = req.body.author?.trim();
     const library = readLibrary();
     const candidates = readCandidates();
 
-    // Case 1: User optionally provided a specific book title
+    // Case 1: User provided a specific book title
     if (specificTitle) {
-      const result = await researchBookCore(specificTitle, req.body.author, req.body.category, library);
+      const result = await researchBookCore(specificTitle, specificAuthor, req.body.category, library, false);
       if (result.isDuplicate || !result.book) {
         return res.status(400).json({
           error: `"${result.existingBook?.title || specificTitle}" is already in the library.`,
@@ -732,8 +934,8 @@ app.post('/api/auto-add-books', async (req, res) => {
       writeLibrary(library);
 
       const updatedCandidates = candidates.filter((c: any) => {
-        const normC = c.title.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const normNew = result.book!.title.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const normC = normalizeBookTitle(c.title);
+        const normNew = normalizeBookTitle(result.book!.title);
         return !normC.includes(normNew) && !normNew.includes(normC);
       });
       writeCandidates(updatedCandidates);
@@ -746,76 +948,112 @@ app.post('/api/auto-add-books', async (req, res) => {
       });
     }
 
-    // Case 2: User specified only the number of books!
-    // The AI automatically picks and adds those books from allowed categories, guaranteeing NO duplicates!
+    // Case 2: Add any number of non-duplicate books automatically using curated pool + endless free Open Library Subject discovery
     const addedBooks: any[] = [];
-
-    // Pre-curated pool of high-reputation classics to guarantee non-duplicate quality
     const curatedPool = [
-      { title: "Never Split the Difference", author: "Chris Voss", category: "Personal Development" },
-      { title: "Antifragile", author: "Nassim Nicholas Taleb", category: "Finance" },
-      { title: "Good to Great", author: "Jim Collins", category: "Business" },
-      { title: "The Most Important Thing", author: "Howard Marks", category: "Investing" },
-      { title: "Shoe Dog", author: "Phil Knight", category: "Entrepreneurship" },
-      { title: "Deep Work", author: "Cal Newport", category: "Self-Growth" },
-      { title: "The Almanack of Naval Ravikant", author: "Eric Jorgenson", category: "Self-Growth" },
-      { title: "The Innovator's Dilemma", author: "Clayton M. Christensen", category: "Business" },
-      { title: "Common Stocks and Uncommon Profits", author: "Philip A. Fisher", category: "Investing" },
-      { title: "Four Thousand Weeks", author: "Oliver Burkeman", category: "Self-Growth" },
-      { title: "Essentialism", author: "Greg McKeown", category: "Self-Growth" },
-      { title: "Man's Search for Meaning", author: "Viktor E. Frankl", category: "Self-Growth" },
-      { title: "Drive", author: "Daniel H. Pink", category: "Business" },
-      { title: "Thinking in Bets", author: "Annie Duke", category: "Investing" },
-      { title: "Rework", author: "Jason Fried & David Heinemeier Hansson", category: "Entrepreneurship" },
+      { title: 'Never Split the Difference', author: 'Chris Voss', category: 'Personal Development' },
+      { title: 'Antifragile', author: 'Nassim Nicholas Taleb', category: 'Finance' },
+      { title: 'Good to Great', author: 'Jim Collins', category: 'Business' },
+      { title: 'The Most Important Thing', author: 'Howard Marks', category: 'Investing' },
+      { title: 'Shoe Dog', author: 'Phil Knight', category: 'Entrepreneurship' },
+      { title: 'Deep Work', author: 'Cal Newport', category: 'Self-Growth' },
+      { title: 'The Almanack of Naval Ravikant', author: 'Eric Jorgenson', category: 'Self-Growth' },
+      { title: "The Innovator's Dilemma", author: 'Clayton M. Christensen', category: 'Business' },
+      { title: 'Common Stocks and Uncommon Profits', author: 'Philip A. Fisher', category: 'Investing' },
+      { title: 'Four Thousand Weeks', author: 'Oliver Burkeman', category: 'Self-Growth' },
+      { title: 'Essentialism', author: 'Greg McKeown', category: 'Self-Growth' },
+      { title: "Man's Search for Meaning", author: 'Viktor E. Frankl', category: 'Self-Growth' },
+      { title: 'Drive', author: 'Daniel H. Pink', category: 'Business' },
+      { title: 'Thinking in Bets', author: 'Annie Duke', category: 'Investing' },
+      { title: 'Rework', author: 'Jason Fried & David Heinemeier Hansson', category: 'Entrepreneurship' },
+      { title: 'Zero to One', author: 'Peter Thiel', category: 'Entrepreneurship' },
+      { title: 'High Output Management', author: 'Andrew S. Grove', category: 'Management' },
+      { title: 'The Lean Startup', author: 'Eric Ries', category: 'Entrepreneurship' },
+      { title: 'Influence', author: 'Robert B. Cialdini', category: 'Personal Development' },
+      { title: 'The Millionaire Next Door', author: 'Thomas J. Stanley', category: 'Finance' },
+      { title: 'Principles', author: 'Ray Dalio', category: 'Management' },
+      { title: 'The Little Book of Common Sense Investing', author: 'John C. Bogle', category: 'Investing' },
+      { title: 'Mindset', author: 'Carol S. Dweck', category: 'Self-Growth' },
+      { title: 'The 7 Habits of Highly Effective People', author: 'Stephen R. Covey', category: 'Personal Development' },
+      { title: 'Start with Why', author: 'Simon Sinek', category: 'Business' },
+      { title: 'Grit', author: 'Angela Duckworth', category: 'Self-Growth' },
+      { title: 'Measure What Matters', author: 'John Doerr', category: 'Management' },
+      { title: 'The E-Myth Revisited', author: 'Michael E. Gerber', category: 'Business' },
     ];
 
-    for (let i = 0; i < count; i++) {
-      // Find a book from candidates or curated pool not yet in library
-      let candidateToPick = candidates.find((c: any) => {
-        const normC = c.title.toLowerCase().replace(/[^a-z0-9]/g, '');
-        return !library.some((b: any) => {
-          const normB = b.title.toLowerCase().replace(/[^a-z0-9]/g, '');
-          return normB.includes(normC) || normC.includes(normB);
-        });
+    const pickedQueue: Array<{ title: string; author?: string; category?: string }> = [];
+    const alreadyQueued = (title: string) => {
+      const n = normalizeBookTitle(title);
+      if (!n) return true;
+      const inLib = library.some((b: any) => {
+        const nb = normalizeBookTitle(b.title);
+        return nb === n || (n.length > 5 && nb.length > 5 && (nb.includes(n) || n.includes(nb)));
       });
+      if (inLib) return true;
+      return pickedQueue.some((p) => normalizeBookTitle(p.title) === n);
+    };
 
-      if (!candidateToPick) {
-        candidateToPick = curatedPool.find((c: any) => {
-          const normC = c.title.toLowerCase().replace(/[^a-z0-9]/g, '');
-          return !library.some((b: any) => {
-            const normB = b.title.toLowerCase().replace(/[^a-z0-9]/g, '');
-            return normB.includes(normC) || normC.includes(normB);
-          });
-        });
+    for (const c of candidates) {
+      if (pickedQueue.length >= count) break;
+      if (c?.title && !alreadyQueued(c.title)) {
+        pickedQueue.push({ title: c.title, author: c.author, category: c.category });
       }
+    }
 
-      if (!candidateToPick) {
-        // Dynamic AI discovery for next highest reputation book
-        const existingTitles = library.map((b: any) => b.title).join(', ');
-        const pickPrompt = `Name 1 world-class, bestselling, highly-reputable book in Self-Growth, Investing, Personal Development, Business, Entrepreneurship, or Finance that is NOT in this list: [${existingTitles}]. Return ONLY JSON: {"title": "Book Title", "author": "Author Name", "category": "Category"}`;
-        
-        try {
-          const aiPickResponse = await ai.models.generateContent({
-            model: 'gemini-4-hydrogen',
-            contents: pickPrompt,
-            config: { responseMimeType: 'application/json' },
-          });
-          candidateToPick = JSON.parse(aiPickResponse.text || '{}');
-        } catch {
-          break;
+    for (const c of curatedPool) {
+      if (pickedQueue.length >= count) break;
+      if (!alreadyQueued(c.title)) {
+        pickedQueue.push(c);
+      }
+    }
+
+    // Endless Open Library subject discovery when curated pool is exhausted
+    if (pickedQueue.length < count) {
+      const subjectMap = [
+        { subject: 'personal_development', category: 'Personal Development' },
+        { subject: 'self_help', category: 'Self-Growth' },
+        { subject: 'investing', category: 'Investing' },
+        { subject: 'business', category: 'Business' },
+        { subject: 'entrepreneurship', category: 'Entrepreneurship' },
+        { subject: 'finance', category: 'Finance' },
+        { subject: 'management', category: 'Management' },
+        { subject: 'leadership', category: 'Management' },
+        { subject: 'economics', category: 'Finance' },
+        { subject: 'psychology', category: 'Self-Growth' },
+      ];
+      const baseOffset = Math.max(0, library.length - 20);
+      for (let s = 0; s < subjectMap.length && pickedQueue.length < count; s++) {
+        const entry = subjectMap[(s + library.length) % subjectMap.length];
+        const offset = (baseOffset + s * 9) % 150;
+        const subjectData = await fetchJsonSafe(
+          `https://openlibrary.org/subjects/${entry.subject}.json?limit=40&offset=${offset}`,
+          5000
+        );
+        const works = Array.isArray(subjectData?.works) ? subjectData.works : [];
+        for (const work of works) {
+          if (pickedQueue.length >= count) break;
+          const wTitle = typeof work?.title === 'string' ? work.title.trim() : '';
+          if (!wTitle || wTitle.length < 3 || wTitle.length > 140) continue;
+          if (!alreadyQueued(wTitle)) {
+            const wAuthor =
+              (Array.isArray(work.authors) && work.authors[0]?.name) || 'Book Author';
+            pickedQueue.push({ title: wTitle, author: wAuthor, category: entry.category });
+          }
         }
       }
+    }
 
-      if (!candidateToPick || !candidateToPick.title) break;
-
-      const result = await researchBookCore(
-        candidateToPick.title,
-        candidateToPick.author,
-        candidateToPick.category,
-        library
-      );
-
+    // Process up to 5 books in parallel so every batch completes quickly with full quality research
+    const results = await Promise.all(
+      pickedQueue.map((item) =>
+        researchBookCore(item.title, item.author, item.category, library, false)
+      )
+    );
+    for (const result of results) {
       if (!result.isDuplicate && result.book) {
+        // Ensure ID uniqueness even across parallel workers
+        result.book.id = makeUniqueBookId(result.book.title, library);
+        result.book.day = Math.min(5000, Math.max(1, library.length + 1));
         library.push(result.book);
         addedBooks.push(result.book);
       }
@@ -825,9 +1063,9 @@ app.post('/api/auto-add-books', async (req, res) => {
 
     // Sync candidates
     const updatedCandidates = candidates.filter((c: any) => {
-      const normC = c.title.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const normC = normalizeBookTitle(c.title);
       return !library.some((b: any) => {
-        const normB = b.title.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const normB = normalizeBookTitle(b.title);
         return normB.includes(normC) || normC.includes(normB);
       });
     });
@@ -837,7 +1075,7 @@ app.post('/api/auto-add-books', async (req, res) => {
       success: true,
       addedBooks,
       totalBooks: library.length,
-      message: `Successfully researched and added ${addedBooks.length} new book${addedBooks.length > 1 ? 's' : ''}.`,
+      message: `Successfully added ${addedBooks.length} new book${addedBooks.length === 1 ? '' : 's'}.`,
     });
   } catch (err: any) {
     console.error('Error in auto-add-books:', err);
@@ -845,23 +1083,27 @@ app.post('/api/auto-add-books', async (req, res) => {
   }
 });
 
-// Helper to generate an accurate, question-aware fallback answer directly from a book's structured content
-function buildGroundedBookFallbackAnswer(book: any, question: string): string {
+// Helper to generate an accurate, question-aware answer using free Wikipedia + Open Library + the book's structured content
+async function buildGroundedBookFallbackAnswer(book: any, question: string): Promise<string> {
   const q = question.toLowerCase();
   const lines: string[] = [];
 
   const isAskingDaily =
-    /apply|daily|practice|habit|action|use|start|today|work|home|life|step|plan/.test(q);
+    /apply|daily|practice|habit|action|use|start|today|work|home|life|step|plan|do i/.test(q);
   const isAskingExample = /example|story|scenario|real|illustrat/.test(q);
   const isAskingWeakness =
-    /weak|flaw|criticism|limit|wrong|bad|miss|disagree|short|problem|mistake/.test(q);
-  const isAskingMainIdea = /main|thesis|summary|gist|point|about|overview|beginner|explain/.test(q);
+    /weak|flaw|criticism|limit|wrong|bad|miss|disagree|short|problem|mistake|conflict/.test(q);
+  const isAskingAuthor = /author|who wrote|writer|year|publish|background/.test(q);
+  const isAskingMainIdea = /main|thesis|summary|gist|point|about|overview|beginner|explain|lesson/.test(q);
 
-  // Match parts whose title or explanation overlaps with words from the user's question
+  const stopWords = new Set([
+    'what', 'when', 'where', 'which', 'about', 'does', 'this', 'book', 'from', 'with',
+    'that', 'your', 'mean', 'explain', 'give', 'tell', 'more', 'some', 'have', 'into',
+  ]);
   const keywords = q
     .replace(/[^a-z0-9\s]/g, ' ')
     .split(/\s+/)
-    .filter((w) => w.length > 3 && !['what', 'does', 'this', 'book', 'about', 'from', 'with', 'that', 'your', 'mean', 'explain'].includes(w));
+    .filter((w) => w.length > 2 && !stopWords.has(w));
 
   const structure = Array.isArray(book.structure) ? book.structure : [];
   const scoredParts = structure
@@ -869,14 +1111,51 @@ function buildGroundedBookFallbackAnswer(book: any, question: string): string {
       const hay = `${part.partTitle || ''} ${part.keyIdea || ''} ${part.realLifeExample || ''} ${part.whyItMatters || ''}`.toLowerCase();
       let score = 0;
       for (const kw of keywords) {
-        if (hay.includes(kw)) score += 1;
+        if (hay.includes(kw)) score += 2;
       }
       return { part, score };
     })
     .filter((item: any) => item.score > 0)
     .sort((a: any, b: any) => b.score - a.score);
 
-  if (scoredParts.length > 0) {
+  const dailyList = Array.isArray(book.dailyImplementation) ? book.dailyImplementation : [];
+  const insightsList = Array.isArray(book.keyInsights) ? book.keyInsights : [];
+
+  // Pull brief free external context from Wikipedia for deeper accuracy on any book
+  let wikiSnippet = '';
+  try {
+    const wikiSearch = await fetchJsonSafe(
+      `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(
+        `${book.title} ${book.author || ''}`
+      )}&srlimit=1&format=json`,
+      2600
+    );
+    const hit = wikiSearch?.query?.search?.[0];
+    if (hit?.title) {
+      const wikiSummary = await fetchJsonSafe(
+        `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(
+          String(hit.title).replace(/\s+/g, '_')
+        )}`,
+        2400
+      );
+      const cleanExtract = cleanFreeText(wikiSummary?.extract);
+      if (cleanExtract) {
+        wikiSnippet = splitSentencesServer(cleanExtract).slice(0, 2).join(' ');
+      }
+    }
+  } catch {
+    // non-fatal
+  }
+
+  if (isAskingAuthor) {
+    lines.push(`"${book.title}" was written by ${book.author || 'its author'}${book.year ? ` (${book.year})` : ''}.`);
+    if (book.qualificationRationale) {
+      lines.push(`\nWhy readers trust it: ${book.qualificationRationale}`);
+    }
+    if (wikiSnippet) {
+      lines.push(`\nOverview from Wikipedia:\n${wikiSnippet}`);
+    }
+  } else if (scoredParts.length > 0) {
     lines.push(`From "${book.title}" by ${book.author}:`);
     scoredParts.slice(0, 2).forEach(({ part }: any) => {
       lines.push(`\n• ${part.partTitle}: ${part.keyIdea}`);
@@ -887,44 +1166,48 @@ function buildGroundedBookFallbackAnswer(book: any, question: string): string {
         lines.push(`  Why it matters: ${part.whyItMatters}`);
       }
     });
-  } else if (isAskingDaily && Array.isArray(book.dailyImplementation) && book.dailyImplementation.length > 0) {
+  } else if (isAskingDaily && dailyList.length > 0) {
     lines.push(`How to apply "${book.title}" in daily life:`);
-    book.dailyImplementation.slice(0, 4).forEach((step: string) => {
+    dailyList.slice(0, 5).forEach((step: string) => {
       lines.push(`• ${step}`);
     });
-  } else if (isAskingWeakness && book.strengthWeakness) {
-    lines.push(`Strengths & limits of "${book.title}":\n${book.strengthWeakness}`);
+  } else if (isAskingWeakness && (book.strengthWeakness || book.conflictNote)) {
+    lines.push(`Strengths & limits of "${book.title}":\n${book.strengthWeakness || ''}`);
+    if (book.conflictNote) {
+      lines.push(`\nContext note:\n${book.conflictNote}`);
+    }
   } else if (isAskingExample) {
     const withExamples = structure.filter((p: any) => p.realLifeExample);
     if (withExamples.length > 0) {
       lines.push(`Real-life examples from "${book.title}":`);
-      withExamples.slice(0, 2).forEach((p: any) => {
+      withExamples.slice(0, 3).forEach((p: any) => {
         lines.push(`• ${p.partTitle}: ${p.realLifeExample}`);
       });
+    } else if (dailyList.length > 0) {
+      lines.push(`Practical ways "${book.title}" applies in everyday life:`);
+      dailyList.slice(0, 3).forEach((step: string) => lines.push(`• ${step}`));
     }
   } else {
-    lines.push(`Main idea of "${book.title}" (${book.author}):\n${book.thesis}`);
-    if (Array.isArray(book.keyInsights) && book.keyInsights.length > 0) {
+    lines.push(`Main idea of "${book.title}" (${book.author}):\n${book.thesis || ''}`);
+    if (insightsList.length > 0) {
       lines.push(`\nKey takeaways:`);
-      book.keyInsights.slice(0, isAskingMainIdea ? 4 : 3).forEach((insight: string) => {
+      insightsList.slice(0, isAskingMainIdea ? 4 : 3).forEach((insight: string) => {
         lines.push(`• ${insight}`);
       });
     }
+    if (wikiSnippet && !isAskingMainIdea) {
+      lines.push(`\nAdditional context:\n${wikiSnippet}`);
+    }
   }
 
-  if (
-    lines.length > 0 &&
-    !isAskingDaily &&
-    Array.isArray(book.dailyImplementation) &&
-    book.dailyImplementation.length > 0
-  ) {
-    lines.push(`\nPractical step to try today:\n• ${book.dailyImplementation[0]}`);
+  if (lines.length > 0 && !isAskingDaily && dailyList.length > 0) {
+    lines.push(`\nPractical step to try today:\n• ${dailyList[0]}`);
   }
 
-  return lines.join('\n').trim();
+  return lines.join('\n').trim() || `Main idea of "${book.title}": ${book.thesis || ''}`;
 }
 
-// POST /api/ask-lab - Accurate, book-grounded Q&A
+// POST /api/ask-lab - Accurate, book-grounded Q&A powered by free APIs
 app.post('/api/ask-lab', async (req, res) => {
   try {
     const { bookId, bookContext, question } = req.body;
@@ -943,14 +1226,41 @@ app.post('/api/ask-lab', async (req, res) => {
       bookContext ||
       null;
 
+    // Fetch brief Wikipedia background so even newly added books have deep context on free APIs
+    let wikiBackground = '';
+    if (matchedBook?.title) {
+      try {
+        const wikiSearch = await fetchJsonSafe(
+          `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(
+            `${matchedBook.title} ${matchedBook.author || ''}`
+          )}&srlimit=1&format=json`,
+          2500
+        );
+        const hitTitle = wikiSearch?.query?.search?.[0]?.title;
+        if (hitTitle) {
+          const summaryData = await fetchJsonSafe(
+            `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(
+              String(hitTitle).replace(/\s+/g, '_')
+            )}`,
+            2500
+          );
+          wikiBackground = cleanFreeText(summaryData?.extract);
+        }
+      } catch {
+        // non-fatal
+      }
+    }
+
     let context = '';
     if (matchedBook) {
       context = `Book: "${matchedBook.title}" by ${matchedBook.author || 'the author'}
+Category: ${matchedBook.category || ''}
 Main Idea: ${matchedBook.thesis || ''}
 Chapters / Parts: ${JSON.stringify(matchedBook.structure || [])}
 Key Takeaways: ${JSON.stringify(matchedBook.keyInsights || [])}
 Daily Life Application: ${JSON.stringify(matchedBook.dailyImplementation || [])}
-Strengths & Limits: ${matchedBook.strengthWeakness || ''}`;
+Strengths & Limits: ${matchedBook.strengthWeakness || ''}
+${wikiBackground ? `Encyclopedia Background: ${wikiBackground}` : ''}`;
     } else {
       context = `Library titles: ${library
         .map((b: any) => `"${b.title}" by ${b.author}`)
@@ -961,32 +1271,22 @@ Strengths & Limits: ${matchedBook.strengthWeakness || ''}`;
 
 Reader's question: "${cleanQuestion}"
 
-Answer the reader's question accurately, clearly, and directly using plain everyday language. Ground your answer in the actual ideas, frameworks, and examples of the book (verify facts accurately; never invent quotes or chapters that aren't in the book). Give concrete, actionable clarity without filler.`;
+Answer the reader's question accurately, clearly, and directly using plain everyday language. Ground your answer in the actual ideas, frameworks, and examples of the book (never invent quotes or chapters that aren't in the book). Give concrete, actionable clarity without filler.`;
 
-    try {
-      const response = await ai.models.generateContent({
-        model: 'gemini-4-hydrogen',
-        contents: prompt,
-        config: {
-          systemInstruction:
-            'You are a knowledgeable, accurate reading companion for Read a Book. Give clear, truthful, plain-English answers grounded strictly in the book. Keep responses concise, structured, and directly helpful.',
-          tools: [{ googleSearch: {} }],
-        },
-      });
-
-      const answerText = response.text?.trim();
-      if (answerText) {
-        return res.json({ answer: answerText });
+    if (process.env.GEMINI_API_KEY) {
+      const aiAnswer = await generateFreeGeminiWithTimeout(
+        prompt,
+        'You are a knowledgeable, accurate reading companion for Read a Book. Give clear, truthful, plain-English answers grounded strictly in the book. Keep responses concise, structured, and directly helpful.',
+        5500
+      );
+      if (aiAnswer) {
+        return res.json({ answer: aiAnswer });
       }
-    } catch (aiErr: any) {
-      console.warn('Ask-lab Gemini fallback triggered:', aiErr?.message || aiErr);
     }
 
-    // Fallback to grounded structured answer if Gemini fails or quota is exhausted
     if (matchedBook) {
-      return res.json({
-        answer: buildGroundedBookFallbackAnswer(matchedBook, cleanQuestion),
-      });
+      const answer = await buildGroundedBookFallbackAnswer(matchedBook, cleanQuestion);
+      return res.json({ answer });
     }
 
     return res.status(503).json({

@@ -19,7 +19,9 @@ import {
   getStoredLibrary,
   saveStoredLibrary,
   mergeLibraries,
+  normalizeTitle,
 } from './utils/libraryStorage';
+import { addBooksOnClientViaFreeApis } from './utils/freeBookApi';
 import {
   getStoredReaderPrefs,
   saveReaderPrefs,
@@ -305,49 +307,102 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleAutoAddBooks = async (count: number, specificTitle?: string) => {
+  const handleAutoAddBooks = async (
+    count: number,
+    specificTitle?: string,
+    specificAuthor?: string
+  ) => {
+    const safeCount = Math.max(1, Math.min(5, Math.floor(count) || 1));
     setIsAddingBooks(true);
     setToastMessage(null);
 
-    try {
-      const res = await fetch('/api/auto-add-books', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ count, specificTitle }),
+    const applyAddedBooks = (addedBooks: Book[]) => {
+      setLibrary((prev) => {
+        const next = [...prev];
+        for (const newBook of addedBooks) {
+          const newNorm = normalizeTitle(newBook.title);
+          if (
+            !next.some(
+              (b) => b.id === newBook.id || (newNorm && normalizeTitle(b.title) === newNorm)
+            )
+          ) {
+            next.push(newBook);
+          }
+        }
+        saveStoredLibrary(next);
+        return next;
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setToastMessage({ text: data.error || 'Failed to add book.', isError: true });
-        return;
+      if (authUser) {
+        void syncBooksToFirestore(authUser.uid, addedBooks).catch((err) => {
+          console.error('Failed to sync newly added books:', err);
+        });
       }
 
-      if (data.addedBooks && data.addedBooks.length > 0) {
-        setLibrary((prev) => {
-          const next = [...prev];
-          for (const newBook of data.addedBooks) {
-            if (!next.some((b) => b.id === newBook.id || b.title.toLowerCase() === newBook.title.toLowerCase())) {
-              next.push(newBook);
+      setToastMessage({
+        text: specificTitle
+          ? `Added "${addedBooks[0].title}".`
+          : `Added ${addedBooks.length} new ${addedBooks.length === 1 ? 'book' : 'books'}.`,
+      });
+    };
+
+    try {
+      let handledByServer = false;
+
+      try {
+        const res = await fetch('/api/auto-add-books', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            count: safeCount,
+            specificTitle,
+            author: specificAuthor,
+          }),
+        });
+
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          const data = await res.json();
+          if (res.ok) {
+            handledByServer = true;
+            if (data.addedBooks && data.addedBooks.length > 0) {
+              applyAddedBooks(data.addedBooks);
+            } else {
+              setToastMessage({ text: 'No new books found to add.', isError: false });
             }
+            return;
           }
-          saveStoredLibrary(next);
-          return next;
-        });
-
-        if (authUser) {
-          void syncBooksToFirestore(authUser.uid, data.addedBooks).catch((err) => {
-            console.error('Failed to sync newly added books:', err);
-          });
+          // Duplicate error returned intentionally by server
+          if (res.status === 400) {
+            setToastMessage({ text: data.error || 'Book is already in your library.', isError: true });
+            return;
+          }
         }
+      } catch {
+        // Server unreachable (e.g. static deployment) — continue to free Open Library/Wikipedia APIs
+      }
 
-        setToastMessage({
-          text: specificTitle
-            ? `Added "${data.addedBooks[0].title}".`
-            : `Added ${data.addedBooks.length} new ${data.addedBooks.length > 1 ? 'books' : 'book'}.`,
-        });
-      } else {
-        setToastMessage({ text: 'No new books found to add.', isError: false });
+      if (!handledByServer) {
+        const clientResult = await addBooksOnClientViaFreeApis(
+          safeCount,
+          specificTitle,
+          library,
+          specificAuthor
+        );
+        if (clientResult.error) {
+          setToastMessage({ text: clientResult.error, isError: true });
+          return;
+        }
+        if (clientResult.addedBooks.length > 0) {
+          applyAddedBooks(clientResult.addedBooks);
+          void fetch('/api/sync-library', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ books: clientResult.addedBooks }),
+          }).catch(() => {});
+        } else {
+          setToastMessage({ text: 'No new books found to add.', isError: false });
+        }
       }
     } catch (err: any) {
       setToastMessage({ text: err.message || 'Adding books failed.', isError: true });

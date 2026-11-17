@@ -10,6 +10,7 @@ import {
 } from '../utils/readerPreferences';
 import { BookCover } from './BookCover';
 import { BookArtworkBackdrop } from './BookArtworkBackdrop';
+import { answerQuestionWithFreeApi } from '../utils/freeBookApi';
 import {
   Copy,
   Check,
@@ -59,11 +60,11 @@ export const BookDetail: React.FC<BookDetailProps> = ({
   const [showTakeaways, setShowTakeaways] = useState(true);
   const [showDailyLife, setShowDailyLife] = useState(true);
   const [showLimits, setShowLimits] = useState(false);
-  const [showAsk, setShowAsk] = useState(false);
+  const [showAsk, setShowAsk] = useState(true);
 
-  // Ask Q&A state
+  // Ask Q&A state (supports follow-up questions cleanly below every book)
   const [labQuestion, setLabQuestion] = useState('');
-  const [labAnswer, setLabAnswer] = useState<string | null>(null);
+  const [qaHistory, setQaHistory] = useState<Array<{ id: number; question: string; answer: string }>>([]);
   const [isAskingLab, setIsAskingLab] = useState(false);
 
   // Daily implementation checklist state
@@ -71,7 +72,7 @@ export const BookDetail: React.FC<BookDetailProps> = ({
 
   useEffect(() => {
     setExpandedParts({ 1: true });
-    setLabAnswer(null);
+    setQaHistory([]);
     setLabQuestion('');
     setCheckedItems({});
     setShowMoreActions(false);
@@ -167,10 +168,11 @@ export const BookDetail: React.FC<BookDetailProps> = ({
     const trimmed = questionText.trim();
     if (!trimmed || isAskingLab) return;
 
-    setLabQuestion(trimmed);
+    setShowAsk(true);
+    setLabQuestion('');
     setIsAskingLab(true);
-    setLabAnswer(null);
 
+    let finalAnswer = '';
     try {
       const res = await fetch('/api/ask-lab', {
         method: 'POST',
@@ -180,7 +182,11 @@ export const BookDetail: React.FC<BookDetailProps> = ({
           bookContext: {
             title: book.title,
             author: book.author,
+            category: book.category,
+            year: book.year,
+            qualificationRationale: book.qualificationRationale,
             thesis: book.thesis,
+            conflictNote: book.conflictNote,
             structure: book.structure,
             keyInsights: book.keyInsights,
             dailyImplementation: dailyImplementationList,
@@ -193,23 +199,21 @@ export const BookDetail: React.FC<BookDetailProps> = ({
         throw new Error('API unavailable');
       }
       const data = await res.json();
-      setLabAnswer(data.answer || 'No response returned.');
+      if (!data.answer || typeof data.answer !== 'string') {
+        throw new Error('Empty response');
+      }
+      finalAnswer = data.answer;
     } catch {
-      const qWords = trimmed.toLowerCase().split(/\s+/).filter((w) => w.length > 2);
-      const scoredParts = book.structure.map((p) => {
-        const hay = `${p.partTitle} ${p.keyIdea} ${p.realLifeExample || ''} ${p.whyItMatters}`.toLowerCase();
-        const hits = qWords.filter((w) => hay.includes(w)).length;
-        return { p, hits };
-      });
-      scoredParts.sort((a, b) => b.hits - a.hits);
-      const bestPart = scoredParts[0]?.hits > 0 ? scoredParts[0].p : book.structure[0];
-      const dailyTip = dailyImplementationList[0] || book.keyInsights[0] || '';
-      const fallbackText = bestPart
-        ? `From "${book.title}" (${bestPart.partTitle}): ${bestPart.keyIdea}${bestPart.realLifeExample ? ` For example: ${bestPart.realLifeExample}` : ''} Try today: ${dailyTip}`
-        : `${book.thesis} ${dailyTip}`;
-      setLabAnswer(fallbackText);
+      finalAnswer = await answerQuestionWithFreeApi(book, trimmed);
     } finally {
       setIsAskingLab(false);
+    }
+
+    if (finalAnswer) {
+      setQaHistory((prev) => [
+        ...prev,
+        { id: Date.now(), question: trimmed, answer: finalAnswer },
+      ]);
     }
   };
 
@@ -683,7 +687,7 @@ export const BookDetail: React.FC<BookDetailProps> = ({
         )}
       </section>
 
-      {/* 6. Expandable Section: Ask a Question (Collapsed by default) */}
+      {/* 6. Expandable Section: Ask a Question (Open below every book) */}
       <section className={`rounded-2xl border overflow-hidden transition-colors ${theme.surfaceBg} ${theme.border}`}>
         <button
           type="button"
@@ -725,6 +729,24 @@ export const BookDetail: React.FC<BookDetailProps> = ({
               ))}
             </div>
 
+            {qaHistory.length > 0 && (
+              <div className="space-y-3">
+                {qaHistory.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`p-4 rounded-2xl border space-y-2 ${theme.subtleBg} ${theme.border}`}
+                  >
+                    <p className={`text-xs sm:text-[13px] font-semibold ${theme.accentText}`}>
+                      {item.question}
+                    </p>
+                    <div className={`${bodyTextClass} whitespace-pre-wrap ${theme.textPrimary}`}>
+                      {item.answer}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <form onSubmit={handleAskLab} className="space-y-2.5">
               <textarea
                 value={labQuestion}
@@ -757,14 +779,6 @@ export const BookDetail: React.FC<BookDetailProps> = ({
                 )}
               </button>
             </form>
-
-            {labAnswer && (
-              <div className={`p-4 rounded-2xl border ${theme.subtleBg} ${theme.border}`}>
-                <div className={`${bodyTextClass} whitespace-pre-wrap ${theme.textPrimary}`}>
-                  {labAnswer}
-                </div>
-              </div>
-            )}
           </div>
         )}
       </section>
