@@ -124,17 +124,17 @@
         "qualificationRationale": {
           "type": "string",
           "minLength": 1,
-          "maxLength": 1500
+          "maxLength": 10000
         },
         "thesis": {
           "type": "string",
           "minLength": 1,
-          "maxLength": 1500
+          "maxLength": 10000
         },
         "conflictNote": {
           "type": "string",
           "minLength": 0,
-          "maxLength": 1500
+          "maxLength": 10000
         },
         "sourcesChecked": {
           "type": "array"
@@ -151,7 +151,7 @@
         "strengthWeakness": {
           "type": "string",
           "minLength": 0,
-          "maxLength": 2000
+          "maxLength": 20000
         },
         "createdAt": {
           "type": "string",
@@ -227,6 +227,33 @@
         }
       },
       "required": ["uid", "bookId", "read", "readAt", "category", "updatedAt"]
+    },
+    "UserDailyQuota": {
+      "title": "UserDailyQuota",
+      "description": "Tracks the user's daily book additions (strict limit of 5 per local calendar day, resetting at midnight 12:00 AM).",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "dateKey": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "count": {
+          "type": "number"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "dateKey", "count", "updatedAt"]
     }
   },
   "firestore": {
@@ -245,6 +272,10 @@
     "/users/{userId}/readProgress/{bookId}": {
       "schema": { "$ref": "#/entities/UserReadStatus" },
       "description": "Owner-only reading completion records used to plot the daily Growth chart."
+    },
+    "/users/{userId}/dailyQuotas/{dateKey}": {
+      "schema": { "$ref": "#/entities/UserDailyQuota" },
+      "description": "Owner-only daily book addition counter capped at 5 per calendar day."
     }
   }
 }

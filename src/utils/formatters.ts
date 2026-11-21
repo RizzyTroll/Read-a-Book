@@ -32,6 +32,155 @@ export function formatBookMarkdown(book: Book): string {
   return md;
 }
 
+export type ShareSnippetFormat = 'social' | 'detailed';
+
+export function buildBookShareUrl(book: Pick<Book, 'id' | 'title'>): string {
+  const encodedId = encodeURIComponent(book.id);
+  if (typeof window === 'undefined') {
+    return `/s/${encodedId}`;
+  }
+  const url = new URL(window.location.href);
+  if (url.hostname.startsWith('ais-dev-')) {
+    url.hostname = url.hostname.replace(/^ais-dev-/, 'ais-pre-');
+  }
+  url.pathname = `/s/${encodedId}`;
+  url.search = '';
+  url.hash = '';
+  return url.toString();
+}
+
+const resolvedShareUrlCache = new Map<string, string>();
+
+export async function resolvePublicBookShareUrl(book: Book): Promise<string> {
+  const cacheKey = `${book.id}:${book.structure?.length || 0}:${book.keyInsights?.length || 0}`;
+  const cached = resolvedShareUrlCache.get(cacheKey);
+  if (cached) return cached;
+
+  try {
+    const res = await fetch('/api/share-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        book: {
+          id: book.id,
+          title: book.title,
+          author: book.author,
+          category: book.category,
+          readingTimeMin: book.readingTimeMin,
+          thesis: book.thesis,
+          keyInsights: book.keyInsights,
+          structure: book.structure,
+          dailyImplementation: book.dailyImplementation,
+          strengthWeakness: book.strengthWeakness,
+        },
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (typeof data?.shortUrl === 'string' && data.shortUrl.startsWith('http')) {
+        resolvedShareUrlCache.set(cacheKey, data.shortUrl);
+        return data.shortUrl;
+      }
+    }
+  } catch {
+    // Fall back gracefully below when offline or API unavailable
+  }
+
+  return buildBookShareUrl(book);
+}
+
+export function getSharedBookIdFromUrl(): string | null {
+  if (typeof window === 'undefined') return null;
+  const raw = new URLSearchParams(window.location.search).get('book');
+  const trimmed = raw?.trim();
+  return trimmed ? trimmed : null;
+}
+
+function pickConciseSentence(text: string, maxLength: number): string {
+  const cleaned = text.replace(/\s+/g, ' ').trim();
+  if (!cleaned) return '';
+
+  const firstSentenceMatch = cleaned.match(/^.+?[.!?](?=\s|$)/);
+  const candidate = firstSentenceMatch ? firstSentenceMatch[0].trim() : cleaned;
+
+  if (candidate.length <= maxLength) {
+    return candidate;
+  }
+
+  const sliced = candidate.slice(0, maxLength - 1);
+  const lastSpace = sliced.lastIndexOf(' ');
+  const safeSlice = lastSpace > 40 ? sliced.slice(0, lastSpace) : sliced;
+  return `${safeSlice.replace(/[,;:\-]+$/, '')}…`;
+}
+
+export function formatBookShareSnippet(
+  book: Book,
+  format: ShareSnippetFormat = 'social',
+  shareUrl?: string
+): string {
+  const resolvedUrl = shareUrl || buildBookShareUrl(book);
+  const insights = book.keyInsights || [];
+
+  if (format === 'detailed') {
+    const insightLines = insights
+      .map((item, idx) => `${idx + 1}. ${item}`)
+      .join('\n');
+
+    return [
+      `"${book.title}" by ${book.author}`,
+      '',
+      `Thesis: ${book.thesis}`,
+      '',
+      'Key Takeaways:',
+      insightLines,
+      '',
+      `Read the full summary: ${resolvedUrl}`,
+    ].join('\n');
+  }
+
+  const thesisHook = pickConciseSentence(book.thesis, 145);
+  const standoutInsight = pickConciseSentence(
+    insights[0] || book.structure?.[0]?.whyItMatters || '',
+    135
+  );
+
+  const lines = [`"${book.title}" by ${book.author} — ${thesisHook}`];
+  if (standoutInsight) {
+    lines.push(`Key takeaway: ${standoutInsight}`);
+  }
+  lines.push(`Read the full summary: ${resolvedUrl}`);
+
+  return lines.join('\n');
+}
+
+export async function copyTextToClipboard(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // Fall back to execCommand below when Clipboard API is restricted
+  }
+
+  try {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
 export function getCategoryBadgeStyle(category: BookCategory): {
   bg: string;
   text: string;

@@ -39,7 +39,50 @@ export function normalizeTitle(title: string): string {
 }
 
 /**
- * Merges two book collections without duplicate titles or IDs
+ * Computes a deterministic richness score for a book summary so updated starter
+ * books with deeper structure, insights, and implementation steps always upgrade older copies.
+ */
+export function getBookDetailScore(book: Partial<Book> | null | undefined): number {
+  if (!book) return 0;
+  const structure = Array.isArray(book.structure) ? book.structure : [];
+  const insights = Array.isArray(book.keyInsights) ? book.keyInsights : [];
+  const daily = Array.isArray(book.dailyImplementation) ? book.dailyImplementation : [];
+
+  const structureTextLen = structure.reduce(
+    (sum, part) =>
+      sum +
+      (part?.partTitle?.length || 0) +
+      (part?.keyIdea?.length || 0) +
+      (part?.realLifeExample?.length || 0) +
+      (part?.whyItMatters?.length || 0),
+    0
+  );
+  const insightsTextLen = insights.reduce((sum, s) => sum + (s?.length || 0), 0);
+  const dailyTextLen = daily.reduce((sum, s) => sum + (s?.length || 0), 0);
+  const metaTextLen =
+    (book.thesis?.length || 0) +
+    (book.qualificationRationale?.length || 0) +
+    (book.conflictNote?.length || 0) +
+    (book.strengthWeakness?.length || 0);
+
+  return (
+    structure.length * 1000 +
+    insights.length * 150 +
+    daily.length * 150 +
+    structureTextLen +
+    insightsTextLen +
+    dailyTextLen +
+    metaTextLen
+  );
+}
+
+export function isBookRicher(candidate: Partial<Book>, current: Partial<Book>): boolean {
+  return getBookDetailScore(candidate) > getBookDetailScore(current);
+}
+
+/**
+ * Merges two book collections without duplicate titles or IDs,
+ * preserving the richer more detailed version when duplicates exist.
  */
 export function mergeLibraries(
   serverBooks: Book[],
@@ -65,12 +108,8 @@ export function mergeLibraries(
       serverByNorm.set(norm, merged.length - 1);
       existingIds.add(localBook.id);
     } else if (serverIdx !== undefined) {
-      // If local copy is richer (has dailyImplementation) and server copy lacks it, keep local copy
       const serverBook = merged[serverIdx];
-      if (
-        localBook.dailyImplementation?.length &&
-        (!serverBook.dailyImplementation || serverBook.dailyImplementation.length === 0)
-      ) {
+      if (isBookRicher(localBook, serverBook)) {
         merged[serverIdx] = localBook;
       }
     }

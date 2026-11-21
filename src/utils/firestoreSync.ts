@@ -26,6 +26,7 @@ import {
 import { auth, db, handleFirestoreError, OperationType } from '../firebase';
 import { Book, BookCategory } from '../types';
 import { ReadRecord, ReadStatusMap } from './readingStorage';
+import { isBookRicher } from './libraryStorage';
 
 export interface UserProfileData {
   uid: string;
@@ -80,22 +81,22 @@ function toFirestoreBookDoc(uid: string, book: Book, includeCreatedAt: boolean) 
   const safeId = sanitizeBookId(book.id);
   const sources = (book.sourcesChecked || [])
     .filter((s) => typeof s === 'string' && s.trim().length > 0)
-    .slice(0, 10)
-    .map((s) => clampStr(s, 300));
+    .slice(0, 25)
+    .map((s) => clampStr(s, 500));
   const structure = (book.structure || [])
-    .slice(0, 20)
+    .slice(0, 100)
     .map((part, idx) => ({
       partNumber: Number(part.partNumber) || idx + 1,
-      partTitle: clampStr(part.partTitle, 250, `Part ${idx + 1}`),
-      keyIdea: clampStr(part.keyIdea, 2500, 'Key idea summary.'),
-      realLifeExample: clampStr(part.realLifeExample, 1000, ''),
-      whyItMatters: clampStr(part.whyItMatters, 1000, ''),
+      partTitle: clampStr(part.partTitle, 400, `Part ${idx + 1}`),
+      keyIdea: clampStr(part.keyIdea, 25000, 'Key idea summary.'),
+      realLifeExample: clampStr(part.realLifeExample, 5000, ''),
+      whyItMatters: clampStr(part.whyItMatters, 5000, ''),
     }));
   if (structure.length === 0) {
     structure.push({
       partNumber: 1,
       partTitle: 'Core Idea',
-      keyIdea: clampStr(book.thesis, 2500, 'Summary notes.'),
+      keyIdea: clampStr(book.thesis, 25000, 'Summary notes.'),
       realLifeExample: '',
       whyItMatters: 'Practical daily mindset.',
     });
@@ -103,16 +104,16 @@ function toFirestoreBookDoc(uid: string, book: Book, includeCreatedAt: boolean) 
 
   const insights = (book.keyInsights || [])
     .filter((i) => typeof i === 'string' && i.trim().length > 0)
-    .slice(0, 20)
-    .map((i) => clampStr(i, 600));
+    .slice(0, 100)
+    .map((i) => clampStr(i, 2000));
   if (insights.length === 0) {
-    insights.push(clampStr(book.thesis, 600, 'Key takeaway from the book.'));
+    insights.push(clampStr(book.thesis, 2000, 'Key takeaway from the book.'));
   }
 
   const daily = (book.dailyImplementation || [])
     .filter((d) => typeof d === 'string' && d.trim().length > 0)
-    .slice(0, 20)
-    .map((d) => clampStr(d, 600));
+    .slice(0, 100)
+    .map((d) => clampStr(d, 2000));
 
   const payload: Record<string, unknown> = {
     uid,
@@ -125,14 +126,14 @@ function toFirestoreBookDoc(uid: string, book: Book, includeCreatedAt: boolean) 
     category: clampCategory(book.category),
     year: Math.min(2100, Math.max(1400, Number(book.year) || new Date().getFullYear())),
     readingTimeMin: Math.min(120, Math.max(1, Number(book.readingTimeMin) || 8)),
-    qualificationRationale: clampStr(book.qualificationRationale, 1500, 'Recommended classic.'),
-    thesis: clampStr(book.thesis, 1500, 'Core summary.'),
-    conflictNote: clampStr(book.conflictNote, 1500, ''),
+    qualificationRationale: clampStr(book.qualificationRationale, 10000, 'Recommended classic.'),
+    thesis: clampStr(book.thesis, 10000, 'Core summary.'),
+    conflictNote: clampStr(book.conflictNote, 10000, ''),
     sourcesChecked: sources,
     structure,
     keyInsights: insights,
     dailyImplementation: daily,
-    strengthWeakness: clampStr(book.strengthWeakness, 2000, ''),
+    strengthWeakness: clampStr(book.strengthWeakness, 20000, ''),
     updatedAt: serverTimestamp(),
   };
 
@@ -489,6 +490,62 @@ export async function seedDefaultBooksIfEmpty(uid: string, starterBooks: Book[])
   return run;
 }
 
+/**
+ * Upgrades already-seeded starter books in a user's Firestore library whenever
+ * canonical defaultLibrary books gain richer summaries, structure parts, or takeaways.
+ */
+export async function refreshStarterBooksInFirestore(
+  uid: string,
+  starterBooks: Book[]
+): Promise<void> {
+  const colPath = `users/${uid}/books`;
+  let existingSnap;
+  try {
+    const booksQuery = query(collection(db, 'users', uid, 'books'), where('uid', '==', uid));
+    existingSnap = await getDocs(booksQuery);
+  } catch (err) {
+    handleFirestoreError(err, OperationType.LIST, colPath);
+  }
+
+  const starterById = new Map(starterBooks.map((b) => [sanitizeBookId(b.id), b]));
+  const docsToUpgrade: Array<{ docId: string; starter: Book }> = [];
+
+  for (const snapDoc of existingSnap.docs) {
+    const starter = starterById.get(snapDoc.id);
+    if (!starter) continue;
+    const data = snapDoc.data();
+    const existingBook: Partial<Book> = {
+      id: data.bookId || snapDoc.id,
+      thesis: data.thesis || '',
+      qualificationRationale: data.qualificationRationale || '',
+      conflictNote: data.conflictNote || '',
+      strengthWeakness: data.strengthWeakness || '',
+      structure: Array.isArray(data.structure) ? data.structure : [],
+      keyInsights: Array.isArray(data.keyInsights) ? data.keyInsights : [],
+      dailyImplementation: Array.isArray(data.dailyImplementation) ? data.dailyImplementation : [],
+    };
+    if (isBookRicher(starter, existingBook)) {
+      docsToUpgrade.push({ docId: snapDoc.id, starter });
+    }
+  }
+
+  if (docsToUpgrade.length === 0) return;
+
+  try {
+    for (let i = 0; i < docsToUpgrade.length; i += 400) {
+      const chunk = docsToUpgrade.slice(i, i + 400);
+      const batch = writeBatch(db);
+      for (const { docId, starter } of chunk) {
+        const { uid: _u, bookId: _b, ...mutableFields } = toFirestoreBookDoc(uid, starter, false);
+        batch.update(doc(db, 'users', uid, 'books', docId), mutableFields);
+      }
+      await batch.commit();
+    }
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, colPath);
+  }
+}
+
 export async function syncReadProgressMapToFirestore(
   uid: string,
   map: ReadStatusMap
@@ -648,3 +705,56 @@ export async function saveBookReadProgressToFirestore(
     handleFirestoreError(err, OperationType.WRITE, path);
   }
 }
+
+export function subscribeDailyQuota(
+  uid: string,
+  dateKey: string,
+  onCount: (count: number) => void
+): Unsubscribe {
+  const path = `users/${uid}/dailyQuotas/${dateKey}`;
+  return onSnapshot(
+    doc(db, 'users', uid, 'dailyQuotas', dateKey),
+    (snap) => {
+      if (!snap.exists()) {
+        onCount(0);
+        return;
+      }
+      const data = snap.data();
+      const raw = typeof data.count === 'number' ? data.count : 0;
+      onCount(Math.max(0, Math.min(5, Math.floor(raw))));
+    },
+    (error) => {
+      handleFirestoreError(error, OperationType.GET, path);
+    }
+  );
+}
+
+export async function incrementFirestoreDailyQuota(
+  uid: string,
+  dateKey: string,
+  delta: number
+): Promise<number> {
+  const safeDelta = Math.max(0, Math.floor(delta));
+  const path = `users/${uid}/dailyQuotas/${dateKey}`;
+  const quotaRef = doc(db, 'users', uid, 'dailyQuotas', dateKey);
+
+  try {
+    return await runTransaction(db, async (tx) => {
+      const snap = await tx.get(quotaRef);
+      const current = snap.exists() && typeof snap.data()?.count === 'number'
+        ? Math.max(0, Math.floor(snap.data().count))
+        : 0;
+      const nextCount = Math.min(5, current + safeDelta);
+      tx.set(quotaRef, {
+        uid,
+        dateKey,
+        count: nextCount,
+        updatedAt: serverTimestamp(),
+      });
+      return nextCount;
+    });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.WRITE, path);
+  }
+}
+

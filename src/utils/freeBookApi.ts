@@ -208,13 +208,25 @@ export async function lookupBookOnFreeApis(
 
   if (bestWikiHit?.title) {
     wikiPageTitle = bestWikiHit.title;
-    const wikiSummary = await fetchJsonWithTimeout<any>(
-      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(
-        String(bestWikiHit.title).replace(/\s+/g, '_')
-      )}`,
-      3500
+    const fullExtractData = await fetchJsonWithTimeout<any>(
+      `https://en.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&titles=${encodeURIComponent(
+        String(bestWikiHit.title)
+      )}&format=json&origin=*`,
+      4500
     );
-    wikiExtract = cleanWikiOrLibraryText(wikiSummary?.extract);
+    const pages = fullExtractData?.query?.pages;
+    const firstPage = pages ? (Object.values(pages)[0] as any) : null;
+    if (firstPage?.extract && typeof firstPage.extract === 'string') {
+      wikiExtract = firstPage.extract.replace(/\[.*?\]/g, '').trim();
+    } else {
+      const wikiSummary = await fetchJsonWithTimeout<any>(
+        `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(
+          String(bestWikiHit.title).replace(/\s+/g, '_')
+        )}`,
+        3500
+      );
+      wikiExtract = cleanWikiOrLibraryText(wikiSummary?.extract);
+    }
   }
 
   const sourcesChecked: string[] = [];
@@ -236,6 +248,34 @@ export async function lookupBookOnFreeApis(
   };
 }
 
+function parseWikipediaSections(extract: string): Array<{ title: string; body: string }> {
+  if (!extract) return [];
+  const skipHeadings = /^(see also|references|external links|further reading|notes|bibliography|citations|sources)$/i;
+  const lines = extract.split('\n');
+  const sections: Array<{ title: string; body: string }> = [];
+  let currentTitle = 'Core Overview & Context';
+  let currentLines: string[] = [];
+
+  for (const line of lines) {
+    const headingMatch = line.match(/^={2,}\s*(.+?)\s*={2,}$/);
+    if (headingMatch) {
+      const body = currentLines.join(' ').replace(/\s+/g, ' ').trim();
+      if (body.length > 40 && !skipHeadings.test(currentTitle)) {
+        sections.push({ title: currentTitle, body });
+      }
+      currentTitle = headingMatch[1].trim();
+      currentLines = [];
+    } else if (line.trim()) {
+      currentLines.push(line.trim());
+    }
+  }
+  const tailBody = currentLines.join(' ').replace(/\s+/g, ' ').trim();
+  if (tailBody.length > 40 && !skipHeadings.test(currentTitle)) {
+    sections.push({ title: currentTitle, body: tailBody });
+  }
+  return sections;
+}
+
 export async function buildBookViaFreeApis(
   rawTitle: string,
   rawAuthor: string | undefined,
@@ -246,23 +286,46 @@ export async function buildBookViaFreeApis(
   const research = await lookupBookOnFreeApis(rawTitle, rawAuthor);
   const category = inferCategory(research.subjects, rawCategory);
 
-  const combinedText = [research.wikiExtract, research.description, research.firstSentence]
+  const wikiSections = parseWikipediaSections(research.wikiExtract);
+  const combinedText = [research.wikiExtract.replace(/^={2,}.+?={2,}$/gm, ''), research.description, research.firstSentence]
     .filter(Boolean)
-    .join(' ');
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim();
   const sentences = splitSentences(combinedText);
 
   const thesis =
     sentences[0] ||
-    `${research.title} by ${research.author} shares practical principles in ${category.toLowerCase()} to help readers make calmer, smarter everyday decisions.`;
+    `${research.title} by ${research.author} presents foundational concepts, frameworks, and practical habits in ${category.toLowerCase()} to guide deeper, steadier everyday judgment.`;
 
-  const themeLabels = research.subjects.slice(0, 3);
+  const themeLabels = research.subjects;
   const structure: BookStructurePart[] = [];
 
-  if (sentences.length >= 2) {
-    const chunkCount = Math.min(4, Math.max(2, Math.ceil(sentences.length / 2)));
-    for (let i = 0; i < chunkCount; i++) {
-      const start = i * 2;
-      const chunk = sentences.slice(start, start + 2).join(' ') || thesis;
+  if (wikiSections.length >= 2) {
+    wikiSections.forEach((sec, idx) => {
+      structure.push({
+        partNumber: idx + 1,
+        partTitle: sec.title,
+        keyIdea: sec.body,
+        realLifeExample: `Consider how "${sec.title}" from "${research.title}" shows up in your current work or habits, and test one small adjustment this week.`,
+        whyItMatters: `Deepens your grasp of ${sec.title.toLowerCase()} so you can apply ${research.author}'s framework deliberately.`,
+      });
+    });
+    if (research.description && !wikiSections.some((s) => s.body.includes(research.description.slice(0, 60)))) {
+      structure.push({
+        partNumber: structure.length + 1,
+        partTitle: 'Publisher Synopsis & Key Themes',
+        keyIdea: research.description,
+        realLifeExample: `Use the core themes (${themeLabels.slice(0, 3).join(', ') || category.toLowerCase()}) as a personal checklist when tackling a related decision.`,
+        whyItMatters: 'Connects the book’s broader arc back to everyday choices.',
+      });
+    }
+  } else if (sentences.length >= 2) {
+    const sentencesPerPart = sentences.length > 12 ? 3 : 2;
+    const partCount = Math.max(2, Math.ceil(sentences.length / sentencesPerPart));
+    for (let i = 0; i < partCount; i++) {
+      const start = i * sentencesPerPart;
+      const chunk = sentences.slice(start, start + sentencesPerPart).join(' ') || thesis;
       const themeHint = themeLabels[i] ? ` — ${themeLabels[i]}` : '';
       structure.push({
         partNumber: i + 1,
@@ -273,11 +336,11 @@ export async function buildBookViaFreeApis(
             ? `Key Principles${themeHint}`
             : i === 2
             ? `Practical Application${themeHint}`
-            : `Long-Term Impact${themeHint}`,
-        keyIdea: chunk.slice(0, 1200),
+            : `Deeper Insights & Frameworks${themeHint}`,
+        keyIdea: chunk,
         realLifeExample: `Pause when facing a choice related to ${
           themeLabels[i] || category.toLowerCase()
-        } and test ${research.author}'s perspective from "${research.title}" on a small, low-risk decision first.`,
+        } and test ${research.author}'s perspective from "${research.title}" on a concrete decision this week.`,
         whyItMatters: `Turns ideas from "${research.title}" into steady everyday habits instead of one-time motivation.`,
       });
     }
@@ -285,14 +348,14 @@ export async function buildBookViaFreeApis(
     structure.push(
       {
         partNumber: 1,
-        partTitle: `Core Idea of ${research.title}`,
+        partTitle: `Core Idea & Mindset of ${research.title}`,
         keyIdea: `${research.title} by ${research.author} focuses on clear fundamentals in ${category.toLowerCase()}. Instead of chasing quick fixes, it encourages slowing down, questioning assumptions, and building habits you can stick with consistently.`,
         realLifeExample: `Choose one small decision this week in ${category.toLowerCase()} and write down the simple rule you will follow before acting.`,
         whyItMatters: 'Clear personal rules prevent emotional mistakes when things get busy.',
       },
       {
         partNumber: 2,
-        partTitle: 'Turning Ideas into Steady Habits',
+        partTitle: 'Turning Frameworks into Steady Habits',
         keyIdea: `Lasting results come from repeating small, practical steps rather than waiting for huge bursts of willpower. Testing each principle in real situations makes it obvious what works best for your own goals.`,
         realLifeExample: 'Spend 10 quiet minutes every Sunday reviewing one idea you tried and one improvement for the week ahead.',
         whyItMatters: 'Consistent small steps compound quietly over months and years.',
@@ -301,8 +364,10 @@ export async function buildBookViaFreeApis(
   }
 
   const keyInsights: string[] = [];
-  for (const s of sentences.slice(0, 4)) {
-    if (s.length <= 260) keyInsights.push(s);
+  for (const s of sentences) {
+    if (s.length >= 30 && s.length <= 420 && !keyInsights.includes(s)) {
+      keyInsights.push(s);
+    }
   }
   if (keyInsights.length < 3) {
     keyInsights.push(
@@ -319,6 +384,8 @@ export async function buildBookViaFreeApis(
     `Review what worked and what felt unclear after testing an idea from "${research.title}" for 7 days.`,
   ];
 
+  const readingTimeMin = Math.max(6, Math.round(structure.length * 3.5));
+
   return {
     id: makeUniqueBookId(research.title, existingIds),
     day: Math.min(5000, Math.max(1, dayNumber)),
@@ -328,17 +395,17 @@ export async function buildBookViaFreeApis(
     author: research.author,
     category,
     year: research.year,
-    readingTimeMin: Math.min(18, Math.max(6, structure.length * 3)),
+    readingTimeMin,
     qualificationRationale: `Added via Open Library & Wikipedia in ${category}${
       research.year ? ` (${research.year})` : ''
     }.`,
-    thesis: thesis.slice(0, 600),
+    thesis,
     conflictNote: `Researched using free public book catalogs (${research.sourcesChecked.join(', ')}).`,
     sourcesChecked: research.sourcesChecked,
     structure,
-    keyInsights: keyInsights.slice(0, 6),
+    keyInsights,
     dailyImplementation,
-    strengthWeakness: `Grounded in public catalog and overview data for "${research.title}" by ${research.author}. Best used by turning one takeaway into a real-world routine this week.`,
+    strengthWeakness: `Grounded in public catalog and overview data for "${research.title}" by ${research.author}. Best used by turning each key section into concrete weekly routines.`,
     researchedAt: new Date().toISOString(),
   };
 }

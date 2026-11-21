@@ -1,6 +1,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Book } from '../types';
-import { formatBookMarkdown, getBookCoverDesign } from '../utils/formatters';
+import {
+  formatBookMarkdown,
+  formatBookShareSnippet,
+  buildBookShareUrl,
+  resolvePublicBookShareUrl,
+  copyTextToClipboard,
+  ShareSnippetFormat,
+  getBookCoverDesign,
+} from '../utils/formatters';
 import {
   ReaderPreferences,
   ReaderTheme,
@@ -31,6 +39,11 @@ import {
   MessageCircle,
   Scale,
   Lightbulb,
+  Share2,
+  X,
+  Link2,
+  ExternalLink,
+  Pencil,
 } from 'lucide-react';
 
 interface BookDetailProps {
@@ -54,6 +67,16 @@ export const BookDetail: React.FC<BookDetailProps> = ({
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [showMoreActions, setShowMoreActions] = useState(false);
 
+  // Share snippet modal state
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [shareFormat, setShareFormat] = useState<ShareSnippetFormat>('social');
+  const [shareUrl, setShareUrl] = useState<string>('');
+  const [isResolvingShareUrl, setIsResolvingShareUrl] = useState(false);
+  const [isEditingSnippet, setIsEditingSnippet] = useState(false);
+  const [shareSnippetText, setShareSnippetText] = useState('');
+  const [shareCopied, setShareCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
   // Clean expandable sections
   const [expandedParts, setExpandedParts] = useState<Record<number, boolean>>({ 1: true });
   const [showBreakdown, setShowBreakdown] = useState(true);
@@ -76,7 +99,22 @@ export const BookDetail: React.FC<BookDetailProps> = ({
     setLabQuestion('');
     setCheckedItems({});
     setShowMoreActions(false);
+    setIsShareOpen(false);
+    setIsEditingSnippet(false);
+    setShareCopied(false);
+    setLinkCopied(false);
   }, [book.id]);
+
+  useEffect(() => {
+    if (!isShareOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsShareOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isShareOpen]);
 
   const theme = useMemo(() => getReaderThemeClasses(readerPrefs), [readerPrefs]);
   const bodyTextClass = useMemo(() => getReaderBodyTextClass(readerPrefs), [readerPrefs]);
@@ -115,12 +153,104 @@ export const BookDetail: React.FC<BookDetailProps> = ({
     });
   };
 
-  const handleCopyMarkdown = () => {
+  const handleCopyMarkdown = async () => {
     const md = formatBookMarkdown(book);
-    navigator.clipboard.writeText(md);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    const ok = await copyTextToClipboard(md);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
+
+  const fallbackShareUrl = useMemo(() => buildBookShareUrl(book), [book]);
+
+  const handleOpenShare = async () => {
+    const initialFormat: ShareSnippetFormat = 'social';
+    setShareFormat(initialFormat);
+    setShareUrl(fallbackShareUrl);
+    setShareSnippetText(formatBookShareSnippet(book, initialFormat, fallbackShareUrl));
+    setShareCopied(false);
+    setLinkCopied(false);
+    setIsEditingSnippet(false);
+    setShowMoreActions(false);
+    setIsShareOpen(true);
+    setIsResolvingShareUrl(true);
+
+    const activeBookId = book.id;
+    const shortUrl = await resolvePublicBookShareUrl(book);
+    setIsResolvingShareUrl(false);
+
+    if (activeBookId === book.id) {
+      setShareUrl(shortUrl);
+      setShareSnippetText((prev) =>
+        prev.includes(fallbackShareUrl)
+          ? prev.replace(fallbackShareUrl, shortUrl)
+          : formatBookShareSnippet(book, initialFormat, shortUrl)
+      );
+    }
+  };
+
+  const handleSwitchShareFormat = (nextFormat: ShareSnippetFormat) => {
+    setShareFormat(nextFormat);
+    setShareSnippetText(formatBookShareSnippet(book, nextFormat, shareUrl || fallbackShareUrl));
+    setShareCopied(false);
+  };
+
+  const handleCopyShareSnippet = async () => {
+    const ok = await copyTextToClipboard(shareSnippetText);
+    if (ok) {
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2200);
+    }
+  };
+
+  const handleCopyShareLink = async () => {
+    const ok = await copyTextToClipboard(shareUrl || fallbackShareUrl);
+    if (ok) {
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2200);
+    }
+  };
+
+  const handleNativeShare = async () => {
+    const activeUrl = shareUrl || fallbackShareUrl;
+    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+      try {
+        await navigator.share({
+          title: `${book.title} — Book Summary`,
+          text: shareSnippetText,
+          url: activeUrl,
+        });
+        return;
+      } catch (err) {
+        if ((err as Error)?.name === 'AbortError') return;
+      }
+    }
+    await handleCopyShareSnippet();
+  };
+
+  const renderSnippetWithClickableLinks = (text: string) => {
+    const parts = text.split(/(https?:\/\/[^\s]+)/g);
+    return parts.map((segment, idx) => {
+      if (/^https?:\/\/[^\s]+$/.test(segment)) {
+        return (
+          <a
+            key={idx}
+            href={segment}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`${theme.accentText} underline underline-offset-2 font-medium break-all hover:opacity-80`}
+          >
+            {segment}
+          </a>
+        );
+      }
+      return <React.Fragment key={idx}>{segment}</React.Fragment>;
+    });
+  };
+
+  const canUseWebShare =
+    typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
   const handleToggleAudio = async () => {
     if (isPlayingAudio) {
@@ -265,7 +395,7 @@ export const BookDetail: React.FC<BookDetailProps> = ({
           </button>
         )}
 
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex flex-wrap items-center gap-2 ml-auto">
           {/* Readable Mode Toggle */}
           <button
             onClick={toggleReadableMode}
@@ -299,6 +429,17 @@ export const BookDetail: React.FC<BookDetailProps> = ({
               }`}
             />
             <span>{isRead ? 'Completed' : 'Mark Read'}</span>
+          </button>
+
+          {/* Share Insights Snippet */}
+          <button
+            type="button"
+            onClick={handleOpenShare}
+            className={`min-h-[40px] flex items-center gap-1.5 px-3.5 rounded-xl text-[13px] font-medium border transition-all cursor-pointer ${theme.surfaceBg} ${theme.hoverBg} ${theme.textPrimary} ${theme.border}`}
+            title="Share book thesis and core insights"
+          >
+            <Share2 className={`w-4 h-4 ${theme.accentText}`} />
+            <span>Share</span>
           </button>
 
           {/* Expandable More Options */}
@@ -782,6 +923,232 @@ export const BookDetail: React.FC<BookDetailProps> = ({
           </div>
         )}
       </section>
+
+      {/* Share Core Insights & Thesis Modal */}
+      {isShareOpen && (
+        <div
+          onClick={() => setIsShareOpen(false)}
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="share-modal-title"
+            className={`w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl border shadow-2xl overflow-hidden flex flex-col max-h-[90vh] ${theme.surfaceBg} ${theme.border}`}
+          >
+            {/* Header */}
+            <div className={`px-5 py-4 border-b flex items-center justify-between gap-3 ${theme.border}`}>
+              <div className="min-w-0">
+                <h3 id="share-modal-title" className={`text-base font-bold tracking-tight truncate ${theme.textPrimary}`}>
+                  Share Book Insights
+                </h3>
+                <p className={`text-xs truncate ${theme.textMuted}`}>
+                  {book.title} · {book.author}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsShareOpen(false)}
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer ${theme.subtleBg} ${theme.hoverBg} ${theme.textMuted}`}
+                aria-label="Close share dialog"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-5 space-y-4 overflow-y-auto">
+              {/* Direct Shareable Summary Link */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className={`text-xs font-medium ${theme.textSecondary}`}>
+                    Summary link
+                  </span>
+                  {isResolvingShareUrl && (
+                    <span className={`inline-flex items-center gap-1 text-[11px] ${theme.accentText}`}>
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <span>Generating short link...</span>
+                    </span>
+                  )}
+                </div>
+                <div className={`flex items-center gap-2 p-1.5 pl-3 rounded-xl border ${theme.subtleBg} ${theme.border}`}>
+                  <Link2 className={`w-3.5 h-3.5 flex-shrink-0 ${theme.accentText}`} />
+                  <a
+                    href={shareUrl || fallbackShareUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`flex-1 min-w-0 truncate text-xs font-mono-code underline underline-offset-2 hover:opacity-80 ${theme.accentText}`}
+                  >
+                    {shareUrl || fallbackShareUrl}
+                  </a>
+                  <a
+                    href={shareUrl || fallbackShareUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Open summary in browser"
+                    className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${theme.hoverBg} ${theme.textMuted}`}
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                  <button
+                    type="button"
+                    onClick={handleCopyShareLink}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer flex-shrink-0 ${
+                      linkCopied
+                        ? 'bg-[#34C759] text-white'
+                        : `${theme.surfaceBg} ${theme.hoverBg} ${theme.textPrimary} border ${theme.border}`
+                    }`}
+                  >
+                    {linkCopied ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                        <span>Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copy Link</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Format Toggle */}
+              <div className={`p-1 rounded-xl grid grid-cols-2 gap-1 border ${theme.subtleBg} ${theme.border}`}>
+                <button
+                  type="button"
+                  onClick={() => handleSwitchShareFormat('social')}
+                  className={`py-2 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    shareFormat === 'social'
+                      ? `${theme.surfaceBg} ${theme.textPrimary} shadow-xs`
+                      : `${theme.textMuted} hover:opacity-80`
+                  }`}
+                >
+                  Short Snippet
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSwitchShareFormat('detailed')}
+                  className={`py-2 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    shareFormat === 'detailed'
+                      ? `${theme.surfaceBg} ${theme.textPrimary} shadow-xs`
+                      : `${theme.textMuted} hover:opacity-80`
+                  }`}
+                >
+                  All Insights ({book.keyInsights.length})
+                </button>
+              </div>
+
+              {/* Clickable Shareable Snippet Preview / Editor */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className={`text-xs font-medium ${theme.textSecondary}`}>
+                    Snippet preview
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingSnippet((prev) => !prev)}
+                    className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md transition-colors cursor-pointer ${theme.accentText} ${theme.hoverBg}`}
+                  >
+                    <Pencil className="w-3 h-3" />
+                    <span>{isEditingSnippet ? 'Done' : 'Edit text'}</span>
+                  </button>
+                </div>
+
+                {isEditingSnippet ? (
+                  <textarea
+                    id="share-snippet-textarea"
+                    value={shareSnippetText}
+                    onChange={(e) => {
+                      setShareSnippetText(e.target.value);
+                      if (shareCopied) setShareCopied(false);
+                    }}
+                    rows={5}
+                    className={`w-full rounded-2xl border p-3.5 text-[13px] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#007AFF]/25 focus:border-[#007AFF] transition-all resize-y ${theme.subtleBg} ${theme.border} ${theme.textPrimary}`}
+                  />
+                ) : (
+                  <div
+                    className={`w-full rounded-2xl border p-3.5 text-[13px] leading-relaxed whitespace-pre-wrap break-words ${theme.subtleBg} ${theme.border} ${theme.textPrimary}`}
+                  >
+                    {renderSnippetWithClickableLinks(shareSnippetText)}
+                  </div>
+                )}
+              </div>
+
+              {/* Direct Social Share Links */}
+              <div className="space-y-2">
+                <p className={`text-xs font-medium ${theme.textMuted}`}>Share on social media</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <a
+                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareSnippetText)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`min-h-[38px] px-3.5 rounded-xl border text-xs font-semibold inline-flex items-center gap-1.5 transition-colors ${theme.subtleBg} ${theme.hoverBg} ${theme.border} ${theme.textPrimary}`}
+                  >
+                    <span>Post on X</span>
+                  </a>
+
+                  <a
+                    href={`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(shareSnippetText)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`min-h-[38px] px-3.5 rounded-xl border text-xs font-semibold inline-flex items-center gap-1.5 transition-colors ${theme.subtleBg} ${theme.hoverBg} ${theme.border} ${theme.textPrimary}`}
+                  >
+                    <span>LinkedIn</span>
+                  </a>
+
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(shareSnippetText)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`min-h-[38px] px-3.5 rounded-xl border text-xs font-semibold inline-flex items-center gap-1.5 transition-colors ${theme.subtleBg} ${theme.hoverBg} ${theme.border} ${theme.textPrimary}`}
+                  >
+                    <span>WhatsApp</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className={`px-5 py-4 border-t flex flex-wrap items-center justify-end gap-2.5 ${theme.border}`}>
+              {canUseWebShare && (
+                <button
+                  type="button"
+                  onClick={handleNativeShare}
+                  className={`min-h-[42px] px-4 rounded-xl border text-[13px] font-semibold flex items-center gap-2 transition-colors cursor-pointer ${theme.subtleBg} ${theme.hoverBg} ${theme.border} ${theme.textPrimary}`}
+                >
+                  <Share2 className="w-4 h-4" />
+                  <span>Share via...</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={handleCopyShareSnippet}
+                className={`min-h-[42px] flex-1 sm:flex-initial px-5 rounded-xl text-[13px] font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  shareCopied
+                    ? 'bg-[#34C759] text-white'
+                    : 'bg-[#007AFF] hover:bg-[#0066D6] text-white'
+                }`}
+              >
+                {shareCopied ? (
+                  <>
+                    <Check className="w-4 h-4 stroke-[2.5]" />
+                    <span>Copied Snippet!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    <span>Copy Snippet</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </article>
   );
 };

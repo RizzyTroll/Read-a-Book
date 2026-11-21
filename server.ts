@@ -4,6 +4,7 @@ import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -12,6 +13,9 @@ app.use(express.json({ limit: '10mb' }));
 
 const LIBRARY_FILE = path.resolve(process.cwd(), 'data/library.json');
 const CANDIDATES_FILE = path.resolve(process.cwd(), 'data/candidates.json');
+const DAILY_QUOTAS_FILE = path.resolve(process.cwd(), 'data/dailyQuotas.json');
+const SHARE_LINKS_FILE = path.resolve(process.cwd(), 'data/shareLinks.json');
+const DAILY_BOOK_ADD_LIMIT = 5;
 const CEILING_LIMIT = 10000;
 
 const VALID_CATEGORIES = [
@@ -81,6 +85,61 @@ function writeCandidates(items: any[]) {
   } catch (err) {
     console.error('Error writing candidates:', err);
   }
+}
+
+function getServerLocalDateKey(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function sanitizeQuotaContext(rawUserId: unknown, rawDateKey: unknown): { userKey: string; dateKey: string } {
+  const userKey =
+    typeof rawUserId === 'string' && rawUserId.trim()
+      ? rawUserId.trim().replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 80) || 'guest'
+      : 'guest';
+  const dateKey =
+    typeof rawDateKey === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(rawDateKey.trim())
+      ? rawDateKey.trim()
+      : getServerLocalDateKey();
+  return { userKey, dateKey };
+}
+
+function readDailyQuotas(): Record<string, { count: number; updatedAt: string }> {
+  try {
+    if (fs.existsSync(DAILY_QUOTAS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(DAILY_QUOTAS_FILE, 'utf-8'));
+      if (data && typeof data === 'object') return data;
+    }
+  } catch (err) {
+    console.error('Error reading daily quotas:', err);
+  }
+  return {};
+}
+
+function getDailyAddedCountServer(userKey: string, dateKey: string): number {
+  const quotas = readDailyQuotas();
+  const entry = quotas[`${userKey}:${dateKey}`];
+  const raw = typeof entry?.count === 'number' ? entry.count : 0;
+  return Math.max(0, Math.min(DAILY_BOOK_ADD_LIMIT, raw));
+}
+
+function incrementDailyQuotaServer(userKey: string, dateKey: string, delta: number): number {
+  const quotas = readDailyQuotas();
+  const key = `${userKey}:${dateKey}`;
+  const current = getDailyAddedCountServer(userKey, dateKey);
+  const next = Math.min(DAILY_BOOK_ADD_LIMIT, current + Math.max(0, Math.floor(delta)));
+  quotas[key] = { count: next, updatedAt: new Date().toISOString() };
+  try {
+    const dir = path.dirname(DAILY_QUOTAS_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(DAILY_QUOTAS_FILE, JSON.stringify(quotas, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error writing daily quotas:', err);
+  }
+  return next;
 }
 
 // GET /api/library
@@ -180,7 +239,7 @@ function makeUniqueBookId(title: string, library: any[]): string {
 async function generateFreeGeminiWithTimeout(
   contents: string,
   systemInstruction: string,
-  timeoutMs = 5500
+  timeoutMs = 12000
 ): Promise<string | null> {
   if (!process.env.GEMINI_API_KEY) return null;
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -295,13 +354,25 @@ async function lookupBookViaFreePublicApis(targetTitle: string, targetAuthor?: s
 
   if (bestHit?.title) {
     wikiTitle = bestHit.title;
-    const summaryData = await fetchJsonSafe(
-      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(
-        String(bestHit.title).replace(/\s+/g, '_')
-      )}`,
-      3500
+    const fullExtractData = await fetchJsonSafe(
+      `https://en.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&titles=${encodeURIComponent(
+        String(bestHit.title)
+      )}&format=json`,
+      4500
     );
-    wikiExtract = cleanFreeText(summaryData?.extract);
+    const pages = fullExtractData?.query?.pages;
+    const firstPage = pages ? (Object.values(pages)[0] as any) : null;
+    if (firstPage?.extract && typeof firstPage.extract === 'string') {
+      wikiExtract = firstPage.extract.replace(/\[.*?\]/g, '').trim();
+    } else {
+      const summaryData = await fetchJsonSafe(
+        `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(
+          String(bestHit.title).replace(/\s+/g, '_')
+        )}`,
+        3500
+      );
+      wikiExtract = cleanFreeText(summaryData?.extract);
+    }
   }
 
   const sourcesChecked: string[] = [];
@@ -321,6 +392,34 @@ async function lookupBookViaFreePublicApis(targetTitle: string, targetAuthor?: s
     firstSentence,
     sourcesChecked,
   };
+}
+
+function parseWikipediaSectionsServer(extract: string): Array<{ title: string; body: string }> {
+  if (!extract) return [];
+  const skipHeadings = /^(see also|references|external links|further reading|notes|bibliography|citations|sources)$/i;
+  const lines = extract.split('\n');
+  const sections: Array<{ title: string; body: string }> = [];
+  let currentTitle = 'Core Overview & Context';
+  let currentLines: string[] = [];
+
+  for (const line of lines) {
+    const headingMatch = line.match(/^={2,}\s*(.+?)\s*={2,}$/);
+    if (headingMatch) {
+      const body = currentLines.join(' ').replace(/\s+/g, ' ').trim();
+      if (body.length > 40 && !skipHeadings.test(currentTitle)) {
+        sections.push({ title: currentTitle, body });
+      }
+      currentTitle = headingMatch[1].trim();
+      currentLines = [];
+    } else if (line.trim()) {
+      currentLines.push(line.trim());
+    }
+  }
+  const tailBody = currentLines.join(' ').replace(/\s+/g, ' ').trim();
+  if (tailBody.length > 40 && !skipHeadings.test(currentTitle)) {
+    sections.push({ title: currentTitle, body: tailBody });
+  }
+  return sections;
 }
 
 // Helper: Research a single book using free-tier Gemini + Open Library / Wikipedia
@@ -351,22 +450,22 @@ async function researchBookCore(
 Your standards:
 - Strictly only these categories: Self-Growth, Investing, Personal Development, Business, Entrepreneurship, Finance, Management.
 - Cross-check key claims and frameworks accurately.
-- WRITING STYLE (CRITICAL): Write in EASY, SIMPLE EVERYDAY WORDS—like explaining clearly to a friend over coffee. Avoid heavy academic jargon; whenever a specific term or concept from the book is named, explain what it actually means in plain, detailed English so anyone can understand it completely.
-- DEPTH: Make each section DETAILED (3 to 5 clear sentences) plus a concrete real-life example showing how that specific concept works in practice.
-- Include a "dailyImplementation" list of 5 to 8 specific, practical sentences showing exactly how a person can apply the book in daily life.
+- WRITING STYLE (CRITICAL): Write in EASY, SIMPLE EVERYDAY WORDS—like explaining clearly to a friend over coffee. Avoid heavy academic jargon; whenever a specific term or concept from the book is named, explain what it actually means in plain, thorough English so anyone can understand it completely.
+- COMPREHENSIVE DEPTH (NO LENGTH CAPS): Do NOT enforce arbitrary word limits, sentence counts, or part limits. Scale the length, detail, number of parts in "structure", number of "keyInsights", and number of "dailyImplementation" steps dynamically to match the richness and depth of the entire book, covering every major concept, framework, mental model, and nuance without cutting content short.
+- For each part in "structure", include a thorough "keyIdea" explanation, a concrete "realLifeExample", and a clear "whyItMatters".
 - Output MUST be valid JSON matching the exact schema specified below.`;
 
   const freeContextNotes = [freeData.wikiExtract, freeData.description, freeData.firstSentence]
     .filter(Boolean)
     .join('\n');
 
-  const userPrompt = `Research the following book:
+  const userPrompt = `Research the following book thoroughly:
 Title: "${freeData.title || targetTitle}"
 Author: "${freeData.author || targetAuthor || 'Author'}"
 ${targetCategory ? `Preferred Category: "${targetCategory}"` : ''}
 ${freeContextNotes ? `\nVerified Catalog & Encyclopedia Notes:\n${freeContextNotes}\n` : ''}
 
-Write everything in EASY, CLEAR, DETAILED everyday language with zero confusing jargon.
+Write everything in EASY, CLEAR, COMPREHENSIVE everyday language with zero confusing jargon. Do NOT summarize briefly or truncate ideas—expand each framework completely so the reader gains a true mastery of the book.
 
 Return ONLY a single valid JSON object with this exact structure:
 {
@@ -375,10 +474,10 @@ Return ONLY a single valid JSON object with this exact structure:
   "author": "Author Name(s)",
   "category": "One of: Self-Growth | Investing | Personal Development | Business | Entrepreneurship | Finance | Management",
   "year": ${freeData.year || 2020},
-  "readingTimeMin": 10,
-  "qualificationRationale": "1-2 simple sentences explaining why this book is widely respected and worth reading.",
-  "thesis": "One clear sentence in everyday words explaining the big idea of the whole book.",
-  "conflictNote": "Plain-English note on whether experts agree or disagree on any point in the book.",
+  "readingTimeMin": 12,
+  "qualificationRationale": "Thorough explanation in everyday words of why this book is widely respected and worth reading.",
+  "thesis": "Clear, complete explanation in everyday words capturing the central thesis and scope of the whole book.",
+  "conflictNote": "Plain-English note on whether experts agree or disagree on any point in the book, and key nuances.",
   "sourcesChecked": [
     "Source 1 description",
     "Source 2 description"
@@ -386,19 +485,19 @@ Return ONLY a single valid JSON object with this exact structure:
   "structure": [
     {
       "partNumber": 1,
-      "partTitle": "Clear Name of Part / Chapter Theme",
-      "keyIdea": "Detailed 3-5 sentence explanation in easy everyday words. Explain the exact idea step-by-step and define any book-specific term simply so a beginner understands it completely.",
-      "realLifeExample": "1-2 simple sentences giving a concrete everyday example of this idea in action.",
-      "whyItMatters": "2 clear sentences explaining how this helps the reader make better choices in real life."
+      "partTitle": "Clear Name of Part / Chapter / Concept Theme",
+      "keyIdea": "Comprehensive explanation in easy everyday words without cutting ideas short. Explain the exact concept step-by-step and define any book-specific term simply so a beginner masters it completely.",
+      "realLifeExample": "Concrete everyday example illustrating this specific concept in action.",
+      "whyItMatters": "Clear explanation of how this helps the reader make better decisions in real life."
     }
   ],
   "keyInsights": [
-    "5 to 7 clear, plain-English lessons useful even if someone never reads the full book."
+    "Include as many thorough, plain-English takeaways as needed to capture every major insight from the book."
   ],
   "dailyImplementation": [
-    "5 to 7 specific sentences written for daily life."
+    "Include as many specific, practical daily actions as needed to cover how a reader can put each framework into practice."
   ],
-  "strengthWeakness": "2-3 honest lines in easy words: what this book explains better than anything else, and where it falls short or feels unrealistic."
+  "strengthWeakness": "Honest, thorough assessment in easy words covering what this book explains best as well as any blind spots or limitations."
 }`;
 
   let parsedData: any = null;
@@ -407,7 +506,7 @@ Return ONLY a single valid JSON object with this exact structure:
 
   if (!skipAi && process.env.GEMINI_API_KEY) {
     try {
-      const rawText = await generateFreeGeminiWithTimeout(userPrompt, systemPrompt, 5500);
+      const rawText = await generateFreeGeminiWithTimeout(userPrompt, systemPrompt, 12000);
       if (rawText) {
         const jsonMatch = rawText.match(/\{[\s\S]*\}/);
         parsedData = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(rawText);
@@ -746,61 +845,99 @@ Return ONLY a single valid JSON object with this exact structure:
       parsedData = archive[matchedKey];
     } else {
       const resolvedCat = inferCategoryFromSubjects(freeData.subjects, targetCategory);
-      const combinedFree = [freeData.wikiExtract, freeData.description, freeData.firstSentence]
+      const wikiSections = parseWikipediaSectionsServer(freeData.wikiExtract);
+      const combinedFree = [
+        freeData.wikiExtract.replace(/^={2,}.+?={2,}$/gm, ''),
+        freeData.description,
+        freeData.firstSentence,
+      ]
         .filter(Boolean)
-        .join(' ');
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim();
       const sentences = splitSentencesServer(combinedFree);
-      const themeHints = freeData.subjects.slice(0, 3);
+      const themeHints = freeData.subjects;
 
-      const dynamicStructure =
-        sentences.length >= 2
-          ? Array.from({ length: Math.min(4, Math.max(2, Math.ceil(sentences.length / 2))) }).map((_, idx) => {
-              const snippet = sentences.slice(idx * 2, idx * 2 + 2).join(' ') || sentences[0];
-              const topic = themeHints[idx] ? ` — ${themeHints[idx]}` : '';
-              return {
-                partNumber: idx + 1,
-                partTitle:
-                  idx === 0
-                    ? `Core Perspective${topic}`
-                    : idx === 1
-                    ? `Key Frameworks${topic}`
-                    : idx === 2
-                    ? `Real-World Habits${topic}`
-                    : `Long-Term Mastery${topic}`,
-                keyIdea: snippet.slice(0, 1200),
-                realLifeExample: `Apply the ${
-                  themeHints[idx] || resolvedCat.toLowerCase()
-                } principles from "${freeData.title}" by testing one small, low-risk habit this week.`,
-                whyItMatters: `Turns key lessons from ${freeData.author} into steady everyday decisions.`,
-              };
-            })
-          : [
-              {
-                partNumber: 1,
-                partTitle: 'Clearing Up Common Mistakes',
-                keyIdea: `"${freeData.title}" by ${freeData.author} highlights how replacing guesswork and impulse with simple repeatable principles improves decisions in ${resolvedCat.toLowerCase()}.`,
-                realLifeExample: `Before rushing into a major decision related to ${resolvedCat.toLowerCase()}, pause to check whether it fits your long-term goal.`,
-                whyItMatters: 'Stopping a bad habit early saves far more time and energy than fixing a mess later.',
-              },
-              {
-                partNumber: 2,
-                partTitle: 'Building a Simple Step-by-Step System',
-                keyIdea: `Willpower drops when life gets stressful, so ${freeData.author}'s lessons work best when turned into small weekly routines that run automatically even on busy days.`,
-                realLifeExample: 'Block 20 quiet minutes once a week to review one principle from this book and apply it to an upcoming task.',
-                whyItMatters: 'A small system you actually follow beats a complicated plan you quit after three days.',
-              },
-              {
-                partNumber: 3,
-                partTitle: 'Playing the Long Game Safely',
-                keyIdea: 'Big results come from letting small improvements add up over months and years while keeping a calm margin of safety against unexpected setbacks.',
-                realLifeExample: 'Focus on steady consistency this month instead of chasing an overnight shortcut.',
-                whyItMatters: 'Patience gives small daily improvements time to compound.',
-              },
-            ];
+      const dynamicStructure: any[] = [];
+      if (wikiSections.length >= 2) {
+        wikiSections.forEach((sec, idx) => {
+          dynamicStructure.push({
+            partNumber: idx + 1,
+            partTitle: sec.title,
+            keyIdea: sec.body,
+            realLifeExample: `Consider how "${sec.title}" from "${freeData.title}" shows up in your current work or habits, and test one small adjustment this week.`,
+            whyItMatters: `Deepens your grasp of ${sec.title.toLowerCase()} so you can apply ${freeData.author}'s principles deliberately.`,
+          });
+        });
+        if (
+          freeData.description &&
+          !wikiSections.some((s) => s.body.includes(freeData.description.slice(0, 60)))
+        ) {
+          dynamicStructure.push({
+            partNumber: dynamicStructure.length + 1,
+            partTitle: 'Publisher Synopsis & Key Themes',
+            keyIdea: freeData.description,
+            realLifeExample: `Apply the core themes (${
+              themeHints.slice(0, 3).join(', ') || resolvedCat.toLowerCase()
+            }) as a personal checklist for your next decision.`,
+            whyItMatters: 'Connects the overall scope of the book directly back to everyday choices.',
+          });
+        }
+      } else if (sentences.length >= 2) {
+        const sentencesPerPart = sentences.length > 12 ? 3 : 2;
+        const partCount = Math.max(2, Math.ceil(sentences.length / sentencesPerPart));
+        for (let idx = 0; idx < partCount; idx++) {
+          const snippet = sentences.slice(idx * sentencesPerPart, (idx + 1) * sentencesPerPart).join(' ') || sentences[0];
+          const topic = themeHints[idx] ? ` — ${themeHints[idx]}` : '';
+          dynamicStructure.push({
+            partNumber: idx + 1,
+            partTitle:
+              idx === 0
+                ? `Core Perspective${topic}`
+                : idx === 1
+                ? `Key Frameworks${topic}`
+                : idx === 2
+                ? `Real-World Habits${topic}`
+                : `Deeper Insights & Mastery${topic}`,
+            keyIdea: snippet,
+            realLifeExample: `Apply the ${
+              themeHints[idx] || resolvedCat.toLowerCase()
+            } principles from "${freeData.title}" by testing one concrete habit this week.`,
+            whyItMatters: `Turns key lessons from ${freeData.author} into steady everyday decisions.`,
+          });
+        }
+      } else {
+        dynamicStructure.push(
+          {
+            partNumber: 1,
+            partTitle: 'Clearing Up Common Mistakes',
+            keyIdea: `"${freeData.title}" by ${freeData.author} highlights how replacing guesswork and impulse with simple repeatable principles improves decisions in ${resolvedCat.toLowerCase()}.`,
+            realLifeExample: `Before rushing into a major decision related to ${resolvedCat.toLowerCase()}, pause to check whether it fits your long-term goal.`,
+            whyItMatters: 'Stopping a bad habit early saves far more time and energy than fixing a mess later.',
+          },
+          {
+            partNumber: 2,
+            partTitle: 'Building a Simple Step-by-Step System',
+            keyIdea: `Willpower drops when life gets stressful, so ${freeData.author}'s lessons work best when turned into small weekly routines that run automatically even on busy days.`,
+            realLifeExample: 'Block 20 quiet minutes once a week to review one principle from this book and apply it to an upcoming task.',
+            whyItMatters: 'A small system you actually follow beats a complicated plan you quit after three days.',
+          },
+          {
+            partNumber: 3,
+            partTitle: 'Playing the Long Game Safely',
+            keyIdea: 'Big results come from letting small improvements add up over months and years while keeping a calm margin of safety against unexpected setbacks.',
+            realLifeExample: 'Focus on steady consistency this month instead of chasing an overnight shortcut.',
+            whyItMatters: 'Patience gives small daily improvements time to compound.',
+          }
+        );
+      }
 
-      const derivedInsights = sentences
-        .slice(0, 4)
-        .filter((s) => s.length <= 260);
+      const derivedInsights: string[] = [];
+      for (const s of sentences) {
+        if (s.length >= 30 && s.length <= 420 && !derivedInsights.includes(s)) {
+          derivedInsights.push(s);
+        }
+      }
       if (derivedInsights.length < 3) {
         derivedInsights.push(
           `Simple habits repeated every week in ${resolvedCat.toLowerCase()} beat rare bursts of extreme effort.`,
@@ -815,7 +952,7 @@ Return ONLY a single valid JSON object with this exact structure:
         author: freeData.author || targetAuthor || 'Subject Expert',
         category: resolvedCat,
         year: freeData.year || new Date().getFullYear(),
-        readingTimeMin: Math.min(18, Math.max(6, dynamicStructure.length * 3)),
+        readingTimeMin: Math.max(6, Math.round(dynamicStructure.length * 3.5)),
         qualificationRationale: `Added from free public catalog data (${freeData.sourcesChecked.join(', ')}) in ${resolvedCat}.`,
         thesis:
           sentences[0] ||
@@ -823,7 +960,7 @@ Return ONLY a single valid JSON object with this exact structure:
         conflictNote: `Researched via free public sources (${freeData.sourcesChecked.join(', ')}).`,
         sourcesChecked: freeData.sourcesChecked,
         structure: dynamicStructure,
-        keyInsights: derivedInsights.slice(0, 6),
+        keyInsights: derivedInsights,
         dailyImplementation: [
           `Write down the main takeaway from "${freeData.title}" somewhere you see every morning.`,
           `Pick one small ${resolvedCat.toLowerCase()} habit from ${freeData.author} and practice it for 10 minutes today.`,
@@ -872,6 +1009,17 @@ Return ONLY a single valid JSON object with this exact structure:
 // POST /api/research-book (Single book endpoint)
 app.post('/api/research-book', async (req, res) => {
   try {
+    const { userKey, dateKey } = sanitizeQuotaContext(req.body?.userId, req.body?.dateKey);
+    const usedToday = getDailyAddedCountServer(userKey, dateKey);
+    if (usedToday >= DAILY_BOOK_ADD_LIMIT) {
+      return res.status(429).json({
+        error: "You have reached today's limit of 5 book additions. Your limit resets after midnight (12:00 AM).",
+        limitReached: true,
+        dailyAddedCount: usedToday,
+        dailyRemaining: 0,
+      });
+    }
+
     const library = readLibrary();
     let targetTitle = req.body.title?.trim();
     let targetAuthor = req.body.author?.trim();
@@ -891,6 +1039,7 @@ app.post('/api/research-book', async (req, res) => {
 
     library.push(result.book);
     writeLibrary(library);
+    const updatedUsedToday = incrementDailyQuotaServer(userKey, dateKey, 1);
 
     // Remove from candidates if it was there
     const candidates = readCandidates();
@@ -901,22 +1050,51 @@ app.post('/api/research-book', async (req, res) => {
     });
     writeCandidates(updatedCandidates);
 
-    return res.json({ success: true, book: result.book, totalBooks: library.length });
+    return res.json({
+      success: true,
+      book: result.book,
+      totalBooks: library.length,
+      dailyAddedCount: updatedUsedToday,
+      dailyRemaining: Math.max(0, DAILY_BOOK_ADD_LIMIT - updatedUsedToday),
+    });
   } catch (error: any) {
     console.error('Error during book research:', error);
-    return res.status(500).json({ error: error.message || 'Book research failed.' });
+    return res.status(500).json({ error: 'Failed to add the book. Please try again.' });
   }
 });
 
-// POST /api/auto-add-books (Max 5 books per batch for quality, with free APIs + Gemini 2.5 Flash)
+// POST /api/auto-add-books (Max 5 books per user per day, with free APIs + Gemini 2.5 Flash)
 app.post('/api/auto-add-books', async (req, res) => {
   try {
-    let count = parseInt(req.body.count || '1', 10);
-    if (isNaN(count) || count < 1) count = 1;
-    if (count > 5) count = 5; // Limit to 5 books at a time to prioritize quality over quantity
+    const { userKey, dateKey } = sanitizeQuotaContext(req.body?.userId, req.body?.dateKey);
+    const usedToday = getDailyAddedCountServer(userKey, dateKey);
+    const remainingToday = Math.max(0, DAILY_BOOK_ADD_LIMIT - usedToday);
+
+    if (remainingToday <= 0) {
+      return res.status(429).json({
+        error: "You have reached today's limit of 5 book additions. Your limit resets after midnight (12:00 AM).",
+        limitReached: true,
+        dailyAddedCount: usedToday,
+        dailyRemaining: 0,
+      });
+    }
 
     const specificTitle = req.body.specificTitle?.trim();
     const specificAuthor = req.body.author?.trim();
+
+    let count = specificTitle ? 1 : parseInt(req.body.count || '1', 10);
+    if (isNaN(count) || count < 1) count = 1;
+    if (count > 5) count = 5; // Limit to 5 books at a time to prioritize quality over quantity
+
+    if (count > remainingToday) {
+      return res.status(400).json({
+        error: `You can only add ${remainingToday} more book${remainingToday === 1 ? '' : 's'} today. The 5-book daily limit resets after midnight (12:00 AM).`,
+        limitReached: true,
+        dailyAddedCount: usedToday,
+        dailyRemaining: remainingToday,
+      });
+    }
+
     const library = readLibrary();
     const candidates = readCandidates();
 
@@ -932,6 +1110,7 @@ app.post('/api/auto-add-books', async (req, res) => {
 
       library.push(result.book);
       writeLibrary(library);
+      const updatedUsedToday = incrementDailyQuotaServer(userKey, dateKey, 1);
 
       const updatedCandidates = candidates.filter((c: any) => {
         const normC = normalizeBookTitle(c.title);
@@ -944,6 +1123,8 @@ app.post('/api/auto-add-books', async (req, res) => {
         success: true,
         addedBooks: [result.book],
         totalBooks: library.length,
+        dailyAddedCount: updatedUsedToday,
+        dailyRemaining: Math.max(0, DAILY_BOOK_ADD_LIMIT - updatedUsedToday),
         message: `Added "${result.book.title}" to library.`,
       });
     }
@@ -1071,15 +1252,22 @@ app.post('/api/auto-add-books', async (req, res) => {
     });
     writeCandidates(updatedCandidates);
 
+    const updatedUsedToday =
+      addedBooks.length > 0
+        ? incrementDailyQuotaServer(userKey, dateKey, addedBooks.length)
+        : usedToday;
+
     return res.json({
       success: true,
       addedBooks,
       totalBooks: library.length,
+      dailyAddedCount: updatedUsedToday,
+      dailyRemaining: Math.max(0, DAILY_BOOK_ADD_LIMIT - updatedUsedToday),
       message: `Successfully added ${addedBooks.length} new book${addedBooks.length === 1 ? '' : 's'}.`,
     });
   } catch (err: any) {
     console.error('Error in auto-add-books:', err);
-    return res.status(500).json({ error: err.message || 'Auto-adding books failed.' });
+    return res.status(500).json({ error: 'Failed to add the book. Please try again.' });
   }
 });
 
@@ -1344,6 +1532,340 @@ app.post('/api/tts', async (req, res) => {
     console.error('Error generating TTS:', err);
     return res.status(500).json({ error: err.message || 'TTS generation unavailable.' });
   }
+});
+
+// =========================================================================
+// Public Short Share Links & Standalone Chrome Summary Reader
+// =========================================================================
+interface ShareLinkCacheStore {
+  telegraphToken?: string;
+  links: Record<
+    string,
+    {
+      contentHash: string;
+      readerUrl: string;
+      shortUrl: string;
+      updatedAt: string;
+    }
+  >;
+}
+
+function readShareLinksCache(): ShareLinkCacheStore {
+  try {
+    if (fs.existsSync(SHARE_LINKS_FILE)) {
+      const parsed = JSON.parse(fs.readFileSync(SHARE_LINKS_FILE, 'utf-8'));
+      if (parsed && typeof parsed === 'object') {
+        return {
+          telegraphToken: typeof parsed.telegraphToken === 'string' ? parsed.telegraphToken : undefined,
+          links: parsed.links && typeof parsed.links === 'object' ? parsed.links : {},
+        };
+      }
+    }
+  } catch (err) {
+    console.error('Error reading share links cache:', err);
+  }
+  return { links: {} };
+}
+
+function writeShareLinksCache(store: ShareLinkCacheStore): void {
+  try {
+    const dir = path.dirname(SHARE_LINKS_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(SHARE_LINKS_FILE, JSON.stringify(store, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error writing share links cache:', err);
+  }
+}
+
+function computeBookShareHash(book: any): string {
+  const payload = JSON.stringify({
+    title: String(book.title || ''),
+    author: String(book.author || ''),
+    thesis: String(book.thesis || ''),
+    insights: Array.isArray(book.keyInsights) ? book.keyInsights : [],
+    parts: Array.isArray(book.structure) ? book.structure.length : 0,
+    daily: Array.isArray(book.dailyImplementation) ? book.dailyImplementation.length : 0,
+  });
+  return crypto.createHash('sha256').update(payload).digest('hex').slice(0, 16);
+}
+
+function escapeHtmlText(str: unknown): string {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function buildTelegraphNodes(book: any): any[] {
+  const nodes: any[] = [];
+  const metaParts: string[] = [];
+  if (book.category) metaParts.push(String(book.category));
+  if (book.readingTimeMin) metaParts.push(`${book.readingTimeMin} min read`);
+
+  nodes.push({
+    tag: 'p',
+    children: [
+      { tag: 'em', children: [`By ${String(book.author || 'Unknown Author')}${metaParts.length ? ` · ${metaParts.join(' · ')}` : ''}`] },
+    ],
+  });
+
+  if (book.thesis) {
+    nodes.push({ tag: 'h4', children: ['Core Thesis'] });
+    nodes.push({ tag: 'blockquote', children: [String(book.thesis)] });
+  }
+
+  if (Array.isArray(book.keyInsights) && book.keyInsights.length > 0) {
+    nodes.push({ tag: 'h4', children: ['Key Takeaways'] });
+    nodes.push({
+      tag: 'ul',
+      children: book.keyInsights.map((insight: string) => ({
+        tag: 'li',
+        children: [String(insight)],
+      })),
+    });
+  }
+
+  if (Array.isArray(book.structure) && book.structure.length > 0) {
+    nodes.push({ tag: 'h4', children: ['Summary Breakdown'] });
+    for (const part of book.structure) {
+      nodes.push({
+        tag: 'p',
+        children: [
+          {
+            tag: 'strong',
+            children: [`Part ${part.partNumber}: ${String(part.partTitle || '')}`],
+          },
+        ],
+      });
+      if (part.keyIdea) {
+        nodes.push({ tag: 'p', children: [String(part.keyIdea)] });
+      }
+      if (part.realLifeExample) {
+        nodes.push({
+          tag: 'p',
+          children: [
+            { tag: 'em', children: [`Example: ${String(part.realLifeExample)}`] },
+          ],
+        });
+      }
+      if (part.whyItMatters) {
+        nodes.push({
+          tag: 'p',
+          children: [`Takeaway: ${String(part.whyItMatters)}`],
+        });
+      }
+    }
+  }
+
+  if (Array.isArray(book.dailyImplementation) && book.dailyImplementation.length > 0) {
+    nodes.push({ tag: 'h4', children: ['Implement in Daily Life'] });
+    nodes.push({
+      tag: 'ol',
+      children: book.dailyImplementation.map((step: string) => ({
+        tag: 'li',
+        children: [String(step)],
+      })),
+    });
+  }
+
+  if (book.strengthWeakness) {
+    nodes.push({ tag: 'h4', children: ['Strengths & Limits'] });
+    nodes.push({ tag: 'p', children: [String(book.strengthWeakness)] });
+  }
+
+  return nodes;
+}
+
+async function shortenPublicUrl(longUrl: string): Promise<string> {
+  try {
+    const res = await fetch(
+      `https://is.gd/create.php?format=simple&url=${encodeURIComponent(longUrl)}`
+    );
+    if (res.ok) {
+      const shortText = (await res.text()).trim();
+      if (/^https?:\/\/is\.gd\/[a-zA-Z0-9_-]+$/.test(shortText)) {
+        return shortText;
+      }
+    }
+  } catch {
+    // try tinyurl fallback below
+  }
+
+  try {
+    const res = await fetch(
+      `https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`
+    );
+    if (res.ok) {
+      const shortText = (await res.text()).trim();
+      if (/^https?:\/\/tinyurl\.com\/[a-zA-Z0-9_-]+$/.test(shortText)) {
+        return shortText;
+      }
+    }
+  } catch {
+    // return original url
+  }
+
+  return longUrl;
+}
+
+async function getOrCreatePublicSummaryUrls(book: any): Promise<{
+  shortUrl: string;
+  readerUrl: string;
+}> {
+  const bookId = String(book.id || 'book').trim();
+  const contentHash = computeBookShareHash(book);
+  const store = readShareLinksCache();
+  const cached = store.links[bookId];
+
+  if (
+    cached &&
+    cached.contentHash === contentHash &&
+    cached.shortUrl &&
+    /^https:\/\/(is\.gd|tinyurl\.com|graph\.org)\//.test(cached.shortUrl)
+  ) {
+    return { shortUrl: cached.shortUrl, readerUrl: cached.readerUrl };
+  }
+
+  let token = store.telegraphToken;
+  if (!token) {
+    const accRes = await fetch(
+      'https://api.telegra.ph/createAccount?short_name=ReadABook&author_name=Read+a+Book'
+    );
+    const accData = (await accRes.json()) as any;
+    if (accData?.ok && accData?.result?.access_token) {
+      token = String(accData.result.access_token);
+      store.telegraphToken = token;
+      writeShareLinksCache(store);
+    }
+  }
+
+  if (!token) {
+    throw new Error('Could not initialize public summary publisher.');
+  }
+
+  const pageRes = await fetch('https://api.telegra.ph/createPage', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      access_token: token,
+      title: `${String(book.title || 'Book Summary')} — Book Summary`,
+      author_name: 'Read a Book',
+      content: buildTelegraphNodes(book),
+      return_content: false,
+    }),
+  });
+
+  const pageData = (await pageRes.json()) as any;
+  if (!pageData?.ok || !pageData?.result?.path) {
+    throw new Error('Could not publish public summary page.');
+  }
+
+  // Use graph.org mirror so it opens directly in Chrome outside AI Studio and avoids regional t.me/telegra.ph filters
+  const readerUrl = `https://graph.org/${String(pageData.result.path).replace(/^\/+/, '')}`;
+  const shortUrl = await shortenPublicUrl(readerUrl);
+
+  store.links[bookId] = {
+    contentHash,
+    readerUrl,
+    shortUrl,
+    updatedAt: new Date().toISOString(),
+  };
+  writeShareLinksCache(store);
+
+  return { shortUrl, readerUrl };
+}
+
+// POST /api/share-link - Returns a crisp shortened public link that opens directly in Chrome
+app.post('/api/share-link', async (req, res) => {
+  try {
+    const incomingBook = req.body?.book;
+    if (!incomingBook || typeof incomingBook !== 'object' || !incomingBook.title) {
+      return res.status(400).json({ error: 'Book details are required.' });
+    }
+
+    const { shortUrl, readerUrl } = await getOrCreatePublicSummaryUrls(incomingBook);
+    return res.json({ shortUrl, readerUrl });
+  } catch (err) {
+    console.error('Error creating share link:', err);
+    return res.status(500).json({ error: 'Unable to create short share link.' });
+  }
+});
+
+// GET /s/:bookId - Standalone browser-friendly summary page (when accessed on deployed app host)
+app.get('/s/:bookId', (req, res) => {
+  const rawId = String(req.params.bookId || '').trim();
+  const library = readLibrary();
+  let book = library.find(
+    (b: any) =>
+      b.id === rawId ||
+      String(b.id || '').toLowerCase() === rawId.toLowerCase()
+  );
+
+  if (!book) {
+    try {
+      const defaultsPath = path.resolve(process.cwd(), 'src/data/defaultLibrary.json');
+      if (fs.existsSync(defaultsPath)) {
+        const defaults = JSON.parse(fs.readFileSync(defaultsPath, 'utf-8'));
+        book = defaults.find(
+          (b: any) =>
+            b.id === rawId ||
+            String(b.id || '').toLowerCase() === rawId.toLowerCase()
+        );
+      }
+    } catch {
+      // ignore fallback read error
+    }
+  }
+
+  if (!book) {
+    return res.status(404).send('<!doctype html><html><body style="font-family:system-ui;padding:40px;text-align:center;"><h2>Book summary not found</h2><p><a href="/">Open Library</a></p></body></html>');
+  }
+
+  const insightsHtml = (Array.isArray(book.keyInsights) ? book.keyInsights : [])
+    .map((item: string) => `<li style="margin-bottom:10px;">${escapeHtmlText(item)}</li>`)
+    .join('');
+
+  const partsHtml = (Array.isArray(book.structure) ? book.structure : [])
+    .map(
+      (part: any) => `
+      <div style="background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:16px;padding:18px;margin-bottom:12px;">
+        <h3 style="margin:0 0 8px;font-size:16px;color:#1D1D1F;">Part ${escapeHtmlText(part.partNumber)}: ${escapeHtmlText(part.partTitle)}</h3>
+        <p style="margin:0 0 10px;color:#1D1D1F;line-height:1.6;">${escapeHtmlText(part.keyIdea)}</p>
+        ${part.realLifeExample ? `<p style="margin:0 0 8px;color:#3A3A3C;background:#F5F5F7;padding:10px 12px;border-radius:10px;font-size:14px;"><strong>Example:</strong> ${escapeHtmlText(part.realLifeExample)}</p>` : ''}
+        ${part.whyItMatters ? `<p style="margin:0;color:#248A3D;font-size:14px;"><strong>Takeaway:</strong> ${escapeHtmlText(part.whyItMatters)}</p>` : ''}
+      </div>`
+    )
+    .join('');
+
+  const dailyHtml = (Array.isArray(book.dailyImplementation) ? book.dailyImplementation : [])
+    .map((step: string) => `<li style="margin-bottom:8px;">${escapeHtmlText(step)}</li>`)
+    .join('');
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  return res.send(`<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${escapeHtmlText(book.title)} — Book Summary</title>
+</head>
+<body style="margin:0;background:#F5F5F7;color:#1D1D1F;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;">
+  <main style="max-width:740px;margin:0 auto;padding:28px 18px 56px;">
+    <div style="background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:20px;padding:24px;margin-bottom:18px;">
+      <div style="font-size:12px;font-weight:600;color:#007AFF;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px;">${escapeHtmlText(book.category || 'Book Summary')} · ${escapeHtmlText(book.readingTimeMin || 12)} min read</div>
+      <h1 style="margin:0 0 6px;font-size:28px;line-height:1.2;">${escapeHtmlText(book.title)}</h1>
+      <p style="margin:0 0 16px;color:#6E6E73;font-size:15px;">By ${escapeHtmlText(book.author)}</p>
+      <blockquote style="margin:0;padding:14px 16px;background:#F5F5F7;border-left:3px solid #007AFF;border-radius:10px;font-style:italic;font-size:16px;">"${escapeHtmlText(book.thesis)}"</blockquote>
+    </div>
+    ${insightsHtml ? `<section style="background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:18px;padding:20px;margin-bottom:18px;"><h2 style="margin:0 0 12px;font-size:18px;">Key Takeaways</h2><ul style="margin:0;padding-left:20px;">${insightsHtml}</ul></section>` : ''}
+    ${partsHtml ? `<section style="margin-bottom:18px;"><h2 style="margin:0 0 12px;font-size:18px;padding-left:4px;">Summary Breakdown</h2>${partsHtml}</section>` : ''}
+    ${dailyHtml ? `<section style="background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:18px;padding:20px;margin-bottom:18px;"><h2 style="margin:0 0 12px;font-size:18px;">Implement in Daily Life</h2><ol style="margin:0;padding-left:20px;">${dailyHtml}</ol></section>` : ''}
+    ${book.strengthWeakness ? `<section style="background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:18px;padding:20px;"><h2 style="margin:0 0 10px;font-size:18px;">Strengths &amp; Limits</h2><p style="margin:0;color:#3A3A3C;">${escapeHtmlText(book.strengthWeakness)}</p></section>` : ''}
+  </main>
+</body>
+</html>`);
 });
 
 // Setup Vite or static serving

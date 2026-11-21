@@ -1,9 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   X,
   Search,
   Plus,
   Check,
+  CheckCircle2,
+  AlertCircle,
   Loader2,
   Download,
   ChevronRight,
@@ -20,6 +22,11 @@ import { UserProfileData } from '../utils/firestoreSync';
 
 export type LibraryFilter = 'all' | 'unread' | 'completed';
 
+export interface AddBookFeedback {
+  type: 'success' | 'error' | 'limit';
+  message: string;
+}
+
 interface RightSidebarProps {
   isOpen: boolean;
   onClose: () => void;
@@ -35,6 +42,10 @@ interface RightSidebarProps {
     specificAuthor?: string
   ) => Promise<void>;
   isAddingBooks: boolean;
+  dailyAddedCount: number;
+  dailyLimit: number;
+  addBookFeedback: AddBookFeedback | null;
+  onDismissAddFeedback?: () => void;
   userProfile: UserProfileData | null;
   signedInEmail?: string | null;
   isAuthReady: boolean;
@@ -54,6 +65,10 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   onFilterChange,
   onAutoAddBooks,
   isAddingBooks,
+  dailyAddedCount,
+  dailyLimit,
+  addBookFeedback,
+  onDismissAddFeedback,
   userProfile,
   signedInEmail,
   isAuthReady,
@@ -66,6 +81,15 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   const [specificTitleInput, setSpecificTitleInput] = useState('');
   const [specificAuthorInput, setSpecificAuthorInput] = useState('');
 
+  const remainingToday = Math.max(0, dailyLimit - dailyAddedCount);
+  const isDailyLimitReached = remainingToday <= 0;
+
+  useEffect(() => {
+    if (remainingToday > 0 && bookCountToAdd > remainingToday) {
+      setBookCountToAdd(remainingToday);
+    }
+  }, [remainingToday, bookCountToAdd]);
+
   const readCount = useMemo(() => {
     return Object.values(readStatusMap).filter((r) => r.read).length;
   }, [readStatusMap]);
@@ -73,7 +97,8 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   const progressPct = books.length > 0 ? Math.round((readCount / books.length) * 100) : 0;
 
   const updateCount = (rawValue: number) => {
-    const safe = Math.max(1, Math.min(5, Math.floor(rawValue) || 1));
+    const cap = Math.max(1, Math.min(5, remainingToday || 1));
+    const safe = Math.max(1, Math.min(cap, Math.floor(rawValue) || 1));
     setBookCountToAdd(safe);
   };
 
@@ -281,49 +306,73 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
 
         {/* 2. Add a Book */}
         <section className="space-y-2">
-          <h3 className="px-1 text-[13px] font-semibold text-[#6E6E73]">
-            Add a Book
-          </h3>
+          <div className="px-1 flex items-center justify-between gap-2">
+            <h3 className="text-[13px] font-semibold text-[#6E6E73]">
+              Add a Book
+            </h3>
+            <span
+              className={`text-[12px] font-semibold tabular-nums ${
+                isDailyLimitReached ? 'text-[#D70015]' : 'text-[#6E6E73]'
+              }`}
+            >
+              {remainingToday} of {dailyLimit} left today
+            </span>
+          </div>
+
           <div className="bg-white rounded-2xl border border-black/[0.05] divide-y divide-black/[0.06] overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
-            {/* Quantity Selector (up to 5 at a time for quality) */}
+            {/* Quantity Selector (up to 5 per day per user) */}
             <div className="p-3.5 space-y-3">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-[14px] font-medium text-[#1D1D1F]">
                   Number of books
                 </span>
                 <span className="text-[12px] text-[#6E6E73] tabular-nums">
-                  {bookCountToAdd} of 5 max
+                  {isDailyLimitReached ? '0 left today' : `${bookCountToAdd} selected`}
                 </span>
               </div>
 
               <div className="grid grid-cols-5 gap-1 p-1 bg-[#F2F2F7] rounded-xl">
-                {[1, 2, 3, 4, 5].map((num) => (
-                  <button
-                    key={num}
-                    type="button"
-                    onClick={() => updateCount(num)}
-                    className={`h-8 rounded-lg text-[13px] font-semibold tabular-nums transition-all cursor-pointer ${
-                      bookCountToAdd === num
-                        ? 'bg-white text-[#1D1D1F] shadow-xs'
-                        : 'text-[#6E6E73] hover:text-[#1D1D1F]'
-                    }`}
-                  >
-                    {num}
-                  </button>
-                ))}
+                {[1, 2, 3, 4, 5].map((num) => {
+                  const disabledOption = isDailyLimitReached || num > remainingToday;
+                  return (
+                    <button
+                      key={num}
+                      type="button"
+                      disabled={disabledOption}
+                      onClick={() => updateCount(num)}
+                      className={`h-8 rounded-lg text-[13px] font-semibold tabular-nums transition-all ${
+                        disabledOption
+                          ? 'text-[#AEAEB2] opacity-45 cursor-not-allowed'
+                          : bookCountToAdd === num
+                          ? 'bg-white text-[#1D1D1F] shadow-xs cursor-pointer'
+                          : 'text-[#6E6E73] hover:text-[#1D1D1F] cursor-pointer'
+                      }`}
+                    >
+                      {num}
+                    </button>
+                  );
+                })}
               </div>
+
+              {isDailyLimitReached && (
+                <div className="p-2.5 rounded-xl bg-[#FF9500]/10 border border-[#FF9500]/25 text-[#9A4700] text-[12px] leading-snug">
+                  Daily limit reached ({dailyLimit} books per day). Your limit resets after midnight (12:00 AM).
+                </div>
+              )}
 
               <button
                 type="button"
                 onClick={handleQuickAdd}
-                disabled={isAddingBooks}
-                className="w-full h-11 rounded-xl bg-[#007AFF] hover:bg-[#0066D6] disabled:opacity-50 text-white font-semibold text-[14px] flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                disabled={isAddingBooks || isDailyLimitReached}
+                className="w-full h-11 rounded-xl bg-[#007AFF] hover:bg-[#0066D6] disabled:opacity-50 text-white font-semibold text-[14px] flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:cursor-not-allowed"
               >
                 {isAddingBooks ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span>Adding...</span>
                   </>
+                ) : isDailyLimitReached ? (
+                  <span>Daily Limit Reached</span>
                 ) : (
                   <>
                     <Plus className="w-4 h-4 stroke-[2.2]" />
@@ -333,6 +382,38 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                   </>
                 )}
               </button>
+
+              {addBookFeedback && (
+                <div
+                  role="status"
+                  className={`p-2.5 rounded-xl border text-[12px] leading-snug flex items-start justify-between gap-2 ${
+                    addBookFeedback.type === 'success'
+                      ? 'bg-[#34C759]/10 border-[#34C759]/25 text-[#1F7A35]'
+                      : addBookFeedback.type === 'limit'
+                      ? 'bg-[#FF9500]/10 border-[#FF9500]/25 text-[#9A4700]'
+                      : 'bg-[#FF3B30]/[0.08] border-[#FF3B30]/20 text-[#D70015]'
+                  }`}
+                >
+                  <div className="flex items-start gap-2 min-w-0">
+                    {addBookFeedback.type === 'success' ? (
+                      <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    )}
+                    <span>{addBookFeedback.message}</span>
+                  </div>
+                  {onDismissAddFeedback && (
+                    <button
+                      type="button"
+                      onClick={onDismissAddFeedback}
+                      className="text-[11px] font-bold opacity-60 hover:opacity-100 shrink-0 cursor-pointer"
+                      aria-label="Dismiss message"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Expandable Specific Title Row */}
@@ -360,15 +441,17 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                     placeholder="Book title (e.g. Zero to One)"
                     value={specificTitleInput}
                     onChange={(e) => setSpecificTitleInput(e.target.value)}
+                    disabled={isDailyLimitReached}
                     autoFocus
-                    className="w-full h-10 bg-white border border-black/[0.1] rounded-xl px-3 text-[13px] text-[#1D1D1F] placeholder-[#86868B] focus:outline-none focus:border-[#007AFF]"
+                    className="w-full h-10 bg-white border border-black/[0.1] rounded-xl px-3 text-[13px] text-[#1D1D1F] placeholder-[#86868B] focus:outline-none focus:border-[#007AFF] disabled:opacity-50"
                   />
                   <input
                     type="text"
                     placeholder="Author (optional)"
                     value={specificAuthorInput}
                     onChange={(e) => setSpecificAuthorInput(e.target.value)}
-                    className="w-full h-9 bg-white border border-black/[0.1] rounded-xl px-3 text-[13px] text-[#1D1D1F] placeholder-[#86868B] focus:outline-none focus:border-[#007AFF]"
+                    disabled={isDailyLimitReached}
+                    className="w-full h-9 bg-white border border-black/[0.1] rounded-xl px-3 text-[13px] text-[#1D1D1F] placeholder-[#86868B] focus:outline-none focus:border-[#007AFF] disabled:opacity-50"
                   />
                   <div className="flex items-center justify-end gap-2 pt-0.5">
                     <button
@@ -384,8 +467,8 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                     </button>
                     <button
                       type="submit"
-                      disabled={!specificTitleInput.trim() || isAddingBooks}
-                      className="px-4 py-1.5 rounded-lg bg-[#007AFF] hover:bg-[#0066D6] disabled:opacity-40 text-white text-[13px] font-semibold cursor-pointer"
+                      disabled={!specificTitleInput.trim() || isAddingBooks || isDailyLimitReached}
+                      className="px-4 py-1.5 rounded-lg bg-[#007AFF] hover:bg-[#0066D6] disabled:opacity-40 text-white text-[13px] font-semibold cursor-pointer disabled:cursor-not-allowed"
                     >
                       {isAddingBooks ? 'Adding...' : 'Add Book'}
                     </button>

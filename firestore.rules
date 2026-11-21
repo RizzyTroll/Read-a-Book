@@ -24,6 +24,10 @@ service cloud.firestore {
       return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
+    function isValidDateKey(dateKey) {
+      return dateKey is string && dateKey.size() == 10 && dateKey.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
     function isValidUsernameId(username) {
       return username is string && username.size() >= 3 && username.size() <= 24 && username.matches('^[a-z0-9_]+$');
     }
@@ -149,28 +153,28 @@ service cloud.firestore {
         data.readingTimeMin <= 120 &&
         data.qualificationRationale is string &&
         data.qualificationRationale.size() >= 1 &&
-        data.qualificationRationale.size() <= 1500 &&
+        data.qualificationRationale.size() <= 10000 &&
         data.thesis is string &&
         data.thesis.size() >= 1 &&
-        data.thesis.size() <= 1500 &&
+        data.thesis.size() <= 10000 &&
         data.conflictNote is string &&
-        data.conflictNote.size() <= 1500 &&
+        data.conflictNote.size() <= 10000 &&
         data.sourcesChecked is list &&
-        data.sourcesChecked.size() <= 10 &&
+        data.sourcesChecked.size() <= 25 &&
         (data.sourcesChecked.size() == 0 || data.sourcesChecked[0] is string) &&
         data.structure is list &&
         data.structure.size() >= 1 &&
-        data.structure.size() <= 20 &&
+        data.structure.size() <= 100 &&
         data.structure[0] is map &&
         data.keyInsights is list &&
         data.keyInsights.size() >= 1 &&
-        data.keyInsights.size() <= 20 &&
+        data.keyInsights.size() <= 100 &&
         data.keyInsights[0] is string &&
         data.dailyImplementation is list &&
-        data.dailyImplementation.size() <= 20 &&
+        data.dailyImplementation.size() <= 100 &&
         (data.dailyImplementation.size() == 0 || data.dailyImplementation[0] is string) &&
         data.strengthWeakness is string &&
-        data.strengthWeakness.size() <= 2000 &&
+        data.strengthWeakness.size() <= 20000 &&
         data.createdAt is timestamp &&
         data.updatedAt is timestamp;
     }
@@ -190,6 +194,22 @@ service cloud.firestore {
         data.readAt.size() <= 64 &&
         data.category is string &&
         isValidCategory(data.category) &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidDailyQuota(data, userId, dateKey) {
+      return data.keys().hasAll(['uid', 'dateKey', 'count', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'dateKey', 'count', 'updatedAt']) &&
+        data.uid is string &&
+        isValidId(data.uid) &&
+        data.uid == userId &&
+        data.uid == request.auth.uid &&
+        data.dateKey is string &&
+        isValidDateKey(data.dateKey) &&
+        data.dateKey == dateKey &&
+        data.count is number &&
+        data.count >= 0 &&
+        data.count <= 5 &&
         data.updatedAt is timestamp;
     }
 
@@ -295,6 +315,27 @@ service cloud.firestore {
           'updatedAt'
         ]);
       allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(bookId);
+    }
+
+    // Owner-Only Daily Book Addition Quota (strict limit of 5 per calendar day)
+    match /users/{userId}/dailyQuotas/{dateKey} {
+      allow get: if isSignedIn() && request.auth.uid == userId && isValidDateKey(dateKey);
+      allow list: if isSignedIn() && request.auth.uid == userId && existing().uid == request.auth.uid;
+      allow create: if isSignedIn() &&
+        request.auth.uid == userId &&
+        isValidDateKey(dateKey) &&
+        isValidDailyQuota(incoming(), userId, dateKey) &&
+        incoming().updatedAt == request.time;
+      allow update: if isSignedIn() &&
+        request.auth.uid == userId &&
+        isValidDateKey(dateKey) &&
+        isValidDailyQuota(incoming(), userId, dateKey) &&
+        incoming().uid == existing().uid &&
+        incoming().dateKey == existing().dateKey &&
+        incoming().count >= existing().count &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['count', 'updatedAt']);
+      allow delete: if false;
     }
   }
 }

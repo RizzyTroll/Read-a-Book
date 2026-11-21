@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { Book } from './types';
 import defaultLibraryData from './data/defaultLibrary.json';
 import { Header } from './components/Header';
-import { RightSidebar, LibraryFilter } from './components/RightSidebar';
+import { RightSidebar, LibraryFilter, AddBookFeedback } from './components/RightSidebar';
 import { GrowthModule } from './components/GrowthModule';
 import { BookGrid } from './components/BookGrid';
 import { BookDetail } from './components/BookDetail';
@@ -21,7 +21,15 @@ import {
   mergeLibraries,
   normalizeTitle,
 } from './utils/libraryStorage';
+import { getSharedBookIdFromUrl } from './utils/formatters';
 import { addBooksOnClientViaFreeApis } from './utils/freeBookApi';
+import {
+  DAILY_BOOK_ADD_LIMIT,
+  getLocalDateKey,
+  getLocalDailyAddedCount,
+  setLocalDailyAddedCount,
+  incrementLocalDailyAddedCount,
+} from './utils/dailyLimitStorage';
 import {
   getStoredReaderPrefs,
   saveReaderPrefs,
@@ -31,10 +39,13 @@ import {
 import { auth } from './firebase';
 import {
   awaitPendingSignup,
+  incrementFirestoreDailyQuota,
   logOutUser,
   markTutorialCompletedInFirestore,
+  refreshStarterBooksInFirestore,
   saveBookReadProgressToFirestore,
   seedDefaultBooksIfEmpty,
+  subscribeDailyQuota,
   subscribeUserBooks,
   subscribeUserProfile,
   subscribeUserReadProgress,
@@ -47,15 +58,56 @@ import { useOnlineStatus } from './hooks/useOnlineStatus';
 
 const DEFAULT_BOOKS = defaultLibraryData as Book[];
 const TUTORIAL_SEEN_KEY = 'read_a_book_tutorial_seen_v1';
+const GENERIC_ADD_BOOK_ERROR = 'Failed to add the book. Please try again.';
+
+function findBookByShareParam(books: Book[], shareParam: string): Book | undefined {
+  const trimmed = shareParam.trim();
+  if (!trimmed) return undefined;
+  const targetNorm = normalizeTitle(trimmed);
+  return books.find(
+    (b) =>
+      b.id === trimmed ||
+      b.id.toLowerCase() === trimmed.toLowerCase() ||
+      (targetNorm && normalizeTitle(b.title) === targetNorm)
+  );
+}
+
+function updateBookUrlParam(bookId: string | null): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const url = new URL(window.location.href);
+    if (bookId) {
+      url.searchParams.set('book', bookId);
+    } else {
+      url.searchParams.delete('book');
+    }
+    const nextRelative = `${url.pathname}${url.search}${url.hash}`;
+    window.history.replaceState(null, '', nextRelative);
+  } catch {
+    // ignore history errors in restricted frames
+  }
+}
 
 export default function App() {
+  const initialSharedBookParam = useMemo(() => getSharedBookIdFromUrl(), []);
+
   const [library, setLibrary] = useState<Book[]>(() => {
     const stored = getStoredLibrary();
     const { merged } = mergeLibraries(DEFAULT_BOOKS, stored);
     return merged;
   });
+
+  const initialMatchedSharedBook = useMemo(() => {
+    if (!initialSharedBookParam) return undefined;
+    return findBookByShareParam(library, initialSharedBookParam);
+  }, []); // mount-time match only
+
+  const pendingSharedBookRef = useRef<string | null>(
+    initialSharedBookParam && !initialMatchedSharedBook ? initialSharedBookParam : null
+  );
+
   const [selectedBookId, setSelectedBookId] = useState<string>(
-    () => DEFAULT_BOOKS[0]?.id || ''
+    () => initialMatchedSharedBook?.id || DEFAULT_BOOKS[0]?.id || ''
   );
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterMode, setFilterMode] = useState<LibraryFilter>('all');
@@ -71,6 +123,9 @@ export default function App() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isAddingBooks, setIsAddingBooks] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<{ text: string; isError?: boolean } | null>(null);
+  const [addBookFeedback, setAddBookFeedback] = useState<AddBookFeedback | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Firebase Auth & Cloud Sync state
   const [authUser, setAuthUser] = useState<User | null>(null);
@@ -80,8 +135,16 @@ export default function App() {
   const [authModalMode, setAuthModalMode] = useState<'signup' | 'login' | 'claim'>('signup');
   const [showGuestPrompt, setShowGuestPrompt] = useState<boolean>(true);
 
-  // Quick Tutorial Modal state
+  // Daily 5-book addition limit tracking (resets at local midnight 12:00 AM)
+  const [localDateKey, setLocalDateKey] = useState<string>(() => getLocalDateKey());
+  const quotaUserKey = authUser?.uid || 'guest';
+  const [dailyAddedCount, setDailyAddedCount] = useState<number>(() =>
+    getLocalDailyAddedCount('guest', getLocalDateKey())
+  );
+
+  // Quick Tutorial Modal state (don't obscure a shared book landing link)
   const [isTutorialOpen, setIsTutorialOpen] = useState<boolean>(() => {
+    if (initialSharedBookParam) return false;
     try {
       return localStorage.getItem(TUTORIAL_SEEN_KEY) !== 'true';
     } catch {
@@ -93,8 +156,10 @@ export default function App() {
   const [previewBook, setPreviewBook] = useState<Book | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
 
-  // Expanded summary view
-  const [isSummaryExpanded, setIsSummaryExpanded] = useState<boolean>(false);
+  // Expanded summary view (auto-open if shared ?book= link matched synchronously)
+  const [isSummaryExpanded, setIsSummaryExpanded] = useState<boolean>(
+    () => Boolean(initialMatchedSharedBook)
+  );
 
   // Read completion status map (guest localStorage when signed out; Firestore when signed in)
   const [readStatusMap, setReadStatusMap] = useState<ReadStatusMap>(() => getStoredReadStatus());
@@ -102,6 +167,54 @@ export default function App() {
   // Readable Mode preferences
   const [readerPrefs, setReaderPrefs] = useState<ReaderPreferences>(() => getStoredReaderPrefs());
   const isOnline = useOnlineStatus();
+
+  const showToast = (text: string, isError = false, durationMs = 5000) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToastMessage({ text, isError });
+    toastTimerRef.current = setTimeout(() => {
+      setToastMessage(null);
+    }, durationMs);
+  };
+
+  const showInlineAddFeedback = (feedback: AddBookFeedback, durationMs = 6000) => {
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    setAddBookFeedback(feedback);
+    feedbackTimerRef.current = setTimeout(() => {
+      setAddBookFeedback(null);
+    }, durationMs);
+  };
+
+  useEffect(() => {
+    const checkMidnight = () => {
+      const nextKey = getLocalDateKey();
+      if (nextKey !== localDateKey) {
+        setLocalDateKey(nextKey);
+      }
+    };
+    const interval = setInterval(checkMidnight, 30000);
+    return () => clearInterval(interval);
+  }, [localDateKey]);
+
+  // Keep dailyAddedCount synced for guest & signed-in users (with midnight reset)
+  useEffect(() => {
+    const localCount = getLocalDailyAddedCount(quotaUserKey, localDateKey);
+    setDailyAddedCount(localCount);
+
+    if (!authUser) {
+      return;
+    }
+
+    const unsubQuota = subscribeDailyQuota(authUser.uid, localDateKey, (cloudCount) => {
+      const latestLocal = getLocalDailyAddedCount(authUser.uid, localDateKey);
+      const effective = Math.max(latestLocal, cloudCount);
+      setLocalDailyAddedCount(authUser.uid, effective, localDateKey);
+      setDailyAddedCount(effective);
+    });
+
+    return () => {
+      unsubQuota();
+    };
+  }, [authUser, quotaUserKey, localDateKey]);
 
   const handleUpdateReaderPrefs = (next: ReaderPreferences) => {
     setReaderPrefs(next);
@@ -163,10 +276,14 @@ export default function App() {
         await seedDefaultBooksIfEmpty(user.uid, DEFAULT_BOOKS);
         if (cancelled || auth.currentUser?.uid !== user.uid) return;
 
+        // Upgrade any previously seeded starter books if canonical defaults gained richer detail
+        await refreshStarterBooksInFirestore(user.uid, DEFAULT_BOOKS);
+        if (cancelled || auth.currentUser?.uid !== user.uid) return;
+
         // Subscribe to real-time private profile (@username, tutorialCompleted)
         unsubProfile = subscribeUserProfile(user.uid, (profile) => {
           setUserProfile(profile);
-          if (profile && !profile.tutorialCompleted) {
+          if (profile && !profile.tutorialCompleted && !getSharedBookIdFromUrl()) {
             setIsTutorialOpen(true);
           }
         });
@@ -241,6 +358,19 @@ export default function App() {
     loadAndSyncData();
   }, []);
 
+  // Resolve shared book deep links once async server or Firestore books load
+  useEffect(() => {
+    const pendingId = pendingSharedBookRef.current;
+    if (!pendingId) return;
+    const matched = findBookByShareParam(library, pendingId);
+    if (matched) {
+      setSelectedBookId(matched.id);
+      setIsSummaryExpanded(true);
+      setIsPreviewOpen(false);
+      pendingSharedBookRef.current = null;
+    }
+  }, [library]);
+
   // Filtered books (by search query and sidebar filter)
   const filteredBooks = useMemo(() => {
     return library.filter((book) => {
@@ -299,11 +429,13 @@ export default function App() {
     setSelectedBookId(book.id);
     setIsSummaryExpanded(true);
     setIsPreviewOpen(false);
+    updateBookUrlParam(book.id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBackToLibrary = () => {
     setIsSummaryExpanded(false);
+    updateBookUrlParam(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -312,11 +444,61 @@ export default function App() {
     specificTitle?: string,
     specificAuthor?: string
   ) => {
-    const safeCount = Math.max(1, Math.min(5, Math.floor(count) || 1));
+    // Re-evaluate midnight reset cleanly right at click time
+    const currentDateKey = getLocalDateKey();
+    if (currentDateKey !== localDateKey) {
+      setLocalDateKey(currentDateKey);
+    }
+
+    const currentUsed = Math.max(
+      dailyAddedCount,
+      getLocalDailyAddedCount(quotaUserKey, currentDateKey)
+    );
+    const remainingToday = Math.max(0, DAILY_BOOK_ADD_LIMIT - currentUsed);
+
+    if (remainingToday <= 0) {
+      const limitMsg =
+        "You have reached today's limit of 5 book additions. Your limit resets after midnight (12:00 AM).";
+      showToast(limitMsg, true, 6000);
+      showInlineAddFeedback({ type: 'limit', message: limitMsg }, 7000);
+      return;
+    }
+
+    const requestedCount = specificTitle
+      ? 1
+      : Math.max(1, Math.min(DAILY_BOOK_ADD_LIMIT, Math.floor(count) || 1));
+
+    if (requestedCount > remainingToday) {
+      const partialMsg = `You can only add ${remainingToday} more book${
+        remainingToday === 1 ? '' : 's'
+      } today. Your 5-book daily limit resets after midnight (12:00 AM).`;
+      showToast(partialMsg, true, 6000);
+      showInlineAddFeedback({ type: 'limit', message: partialMsg }, 7000);
+      return;
+    }
+
     setIsAddingBooks(true);
     setToastMessage(null);
+    setAddBookFeedback(null);
 
-    const applyAddedBooks = (addedBooks: Book[]) => {
+    const recordAddedQuota = (addedCount: number, serverTotalToday?: number) => {
+      const nextLocal = incrementLocalDailyAddedCount(quotaUserKey, addedCount, currentDateKey);
+      const nextEffective =
+        typeof serverTotalToday === 'number'
+          ? Math.min(DAILY_BOOK_ADD_LIMIT, Math.max(nextLocal, serverTotalToday))
+          : nextLocal;
+      setLocalDailyAddedCount(quotaUserKey, nextEffective, currentDateKey);
+      setDailyAddedCount(nextEffective);
+
+      if (authUser) {
+        void incrementFirestoreDailyQuota(authUser.uid, currentDateKey, addedCount).catch((err) => {
+          console.error('Failed to sync daily quota:', err);
+        });
+      }
+      return Math.max(0, DAILY_BOOK_ADD_LIMIT - nextEffective);
+    };
+
+    const applyAddedBooks = (addedBooks: Book[], serverTotalToday?: number) => {
       setLibrary((prev) => {
         const next = [...prev];
         for (const newBook of addedBooks) {
@@ -339,11 +521,19 @@ export default function App() {
         });
       }
 
-      setToastMessage({
-        text: specificTitle
-          ? `Added "${addedBooks[0].title}".`
-          : `Added ${addedBooks.length} new ${addedBooks.length === 1 ? 'book' : 'books'}.`,
-      });
+      const leftToday = recordAddedQuota(addedBooks.length, serverTotalToday);
+      const titleSummary =
+        addedBooks.length === 1
+          ? `Added "${addedBooks[0].title}" to your library.`
+          : `Added ${addedBooks.length} new books to your library.`;
+      const remainingNote =
+        leftToday === 0
+          ? ' Daily limit of 5 reached (resets at 12:00 AM).'
+          : ` ${leftToday} of ${DAILY_BOOK_ADD_LIMIT} left today.`;
+
+      const confirmMsg = `${titleSummary}${remainingNote}`;
+      showToast(confirmMsg, false, 6000);
+      showInlineAddFeedback({ type: 'success', message: confirmMsg }, 7000);
     };
 
     try {
@@ -354,9 +544,11 @@ export default function App() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            count: safeCount,
+            count: requestedCount,
             specificTitle,
             author: specificAuthor,
+            userId: quotaUserKey,
+            dateKey: currentDateKey,
           }),
         });
 
@@ -366,17 +558,43 @@ export default function App() {
           if (res.ok) {
             handledByServer = true;
             if (data.addedBooks && data.addedBooks.length > 0) {
-              applyAddedBooks(data.addedBooks);
+              applyAddedBooks(data.addedBooks, data.dailyAddedCount);
             } else {
-              setToastMessage({ text: 'No new books found to add.', isError: false });
+              showToast('No new books found to add.', false, 4500);
+              showInlineAddFeedback({ type: 'error', message: 'No new books found to add.' }, 5000);
             }
             return;
           }
-          // Duplicate error returned intentionally by server
-          if (res.status === 400) {
-            setToastMessage({ text: data.error || 'Book is already in your library.', isError: true });
+
+          if (res.status === 429 || data.limitReached) {
+            if (typeof data.dailyAddedCount === 'number') {
+              setLocalDailyAddedCount(quotaUserKey, data.dailyAddedCount, currentDateKey);
+              setDailyAddedCount(data.dailyAddedCount);
+            }
+            const limitMsg =
+              "You have reached today's limit of 5 book additions. Your limit resets after midnight (12:00 AM).";
+            showToast(limitMsg, true, 6000);
+            showInlineAddFeedback({ type: 'limit', message: limitMsg }, 7000);
             return;
           }
+
+          if (res.status === 400 && typeof data.error === 'string' && data.error.includes('already in')) {
+            showToast(data.error, true, 5000);
+            showInlineAddFeedback({ type: 'error', message: data.error }, 6000);
+            return;
+          }
+
+          if (res.status >= 500) {
+            console.error('Server add-book error status:', res.status, data?.error);
+            showToast(GENERIC_ADD_BOOK_ERROR, true, 5000);
+            showInlineAddFeedback({ type: 'error', message: GENERIC_ADD_BOOK_ERROR }, 6000);
+            return;
+          }
+        } else if (!res.ok) {
+          console.error('Unexpected response status when adding books:', res.status);
+          showToast(GENERIC_ADD_BOOK_ERROR, true, 5000);
+          showInlineAddFeedback({ type: 'error', message: GENERIC_ADD_BOOK_ERROR }, 6000);
+          return;
         }
       } catch {
         // Server unreachable (e.g. static deployment) — continue to free Open Library/Wikipedia APIs
@@ -384,13 +602,16 @@ export default function App() {
 
       if (!handledByServer) {
         const clientResult = await addBooksOnClientViaFreeApis(
-          safeCount,
+          requestedCount,
           specificTitle,
           library,
           specificAuthor
         );
         if (clientResult.error) {
-          setToastMessage({ text: clientResult.error, isError: true });
+          const isSafeDuplicate = clientResult.error.includes('already in');
+          const safeMsg = isSafeDuplicate ? clientResult.error : GENERIC_ADD_BOOK_ERROR;
+          showToast(safeMsg, true, 5000);
+          showInlineAddFeedback({ type: 'error', message: safeMsg }, 6000);
           return;
         }
         if (clientResult.addedBooks.length > 0) {
@@ -401,14 +622,16 @@ export default function App() {
             body: JSON.stringify({ books: clientResult.addedBooks }),
           }).catch(() => {});
         } else {
-          setToastMessage({ text: 'No new books found to add.', isError: false });
+          showToast(GENERIC_ADD_BOOK_ERROR, true, 5000);
+          showInlineAddFeedback({ type: 'error', message: GENERIC_ADD_BOOK_ERROR }, 6000);
         }
       }
-    } catch (err: any) {
-      setToastMessage({ text: err.message || 'Adding books failed.', isError: true });
+    } catch (err) {
+      console.error('Unhandled error while adding book:', err);
+      showToast(GENERIC_ADD_BOOK_ERROR, true, 5000);
+      showInlineAddFeedback({ type: 'error', message: GENERIC_ADD_BOOK_ERROR }, 6000);
     } finally {
       setIsAddingBooks(false);
-      setTimeout(() => setToastMessage(null), 5000);
     }
   };
 
@@ -420,10 +643,9 @@ export default function App() {
   const handleLogOut = async () => {
     try {
       await logOutUser();
-      setToastMessage({ text: 'Signed out cleanly.' });
-      setTimeout(() => setToastMessage(null), 3500);
-    } catch (err: any) {
-      setToastMessage({ text: err.message || 'Failed to sign out.', isError: true });
+      showToast('Signed out cleanly.', false, 3500);
+    } catch {
+      showToast('Failed to sign out. Please try again.', true, 4000);
     }
   };
 
@@ -524,17 +746,20 @@ export default function App() {
             </div>
           )}
 
-          {/* Toast Notification */}
+          {/* Prominent Floating Confirmation & Alert Toast */}
           {toastMessage && (
-            <div className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-3">
+            <div
+              role="status"
+              className="fixed top-16 left-1/2 -translate-x-1/2 z-50 w-[92vw] max-w-md pointer-events-auto"
+            >
               <div
-                className={`p-3.5 rounded-2xl border text-[13px] flex items-center justify-between gap-3 animate-in fade-in duration-200 ${
+                className={`p-3.5 rounded-2xl border shadow-lg backdrop-blur-xl text-[13px] font-medium flex items-center justify-between gap-3 animate-in fade-in duration-200 ${
                   toastMessage.isError
-                    ? 'bg-[#FF3B30]/[0.08] border-[#FF3B30]/20 text-[#D70015]'
-                    : 'bg-[#34C759]/[0.10] border-[#34C759]/25 text-[#248A3D]'
+                    ? 'bg-[#FFF5F5]/95 border-[#FF3B30]/30 text-[#D70015]'
+                    : 'bg-[#F2FBF5]/95 border-[#34C759]/35 text-[#1F7A35]'
                 }`}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                   {toastMessage.isError ? (
                     <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   ) : (
@@ -543,8 +768,10 @@ export default function App() {
                   <span>{toastMessage.text}</span>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setToastMessage(null)}
                   className="text-xs font-bold opacity-60 hover:opacity-100 cursor-pointer"
+                  aria-label="Dismiss notification"
                 >
                   ✕
                 </button>
@@ -624,6 +851,10 @@ export default function App() {
           onFilterChange={(f) => setFilterMode(f)}
           onAutoAddBooks={handleAutoAddBooks}
           isAddingBooks={isAddingBooks}
+          dailyAddedCount={dailyAddedCount}
+          dailyLimit={DAILY_BOOK_ADD_LIMIT}
+          addBookFeedback={addBookFeedback}
+          onDismissAddFeedback={() => setAddBookFeedback(null)}
           userProfile={userProfile}
           signedInEmail={authUser?.email || null}
           isAuthReady={isAuthReady}
