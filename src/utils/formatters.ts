@@ -34,60 +34,23 @@ export function formatBookMarkdown(book: Book): string {
 
 export type ShareSnippetFormat = 'social' | 'detailed';
 
-export function buildBookShareUrl(book: Pick<Book, 'id' | 'title'>): string {
-  const encodedId = encodeURIComponent(book.id);
-  if (typeof window === 'undefined') {
-    return `/s/${encodedId}`;
+export function getShortBookShareId(book: Pick<Book, 'id' | 'day'>): string {
+  if (typeof book.day === 'number' && book.day >= 1 && book.day <= 20) {
+    return String(book.day);
   }
-  const url = new URL(window.location.href);
-  if (url.hostname.startsWith('ais-dev-')) {
-    url.hostname = url.hostname.replace(/^ais-dev-/, 'ais-pre-');
-  }
-  url.pathname = `/s/${encodedId}`;
-  url.search = '';
-  url.hash = '';
-  return url.toString();
+  return book.id;
 }
 
-const resolvedShareUrlCache = new Map<string, string>();
-
-export async function resolvePublicBookShareUrl(book: Book): Promise<string> {
-  const cacheKey = `${book.id}:${book.structure?.length || 0}:${book.keyInsights?.length || 0}`;
-  const cached = resolvedShareUrlCache.get(cacheKey);
-  if (cached) return cached;
-
-  try {
-    const res = await fetch('/api/share-link', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        book: {
-          id: book.id,
-          title: book.title,
-          author: book.author,
-          category: book.category,
-          readingTimeMin: book.readingTimeMin,
-          thesis: book.thesis,
-          keyInsights: book.keyInsights,
-          structure: book.structure,
-          dailyImplementation: book.dailyImplementation,
-          strengthWeakness: book.strengthWeakness,
-        },
-      }),
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      if (typeof data?.shortUrl === 'string' && data.shortUrl.startsWith('http')) {
-        resolvedShareUrlCache.set(cacheKey, data.shortUrl);
-        return data.shortUrl;
-      }
-    }
-  } catch {
-    // Fall back gracefully below when offline or API unavailable
+export function buildBookShareUrl(book: Pick<Book, 'id' | 'day' | 'title'>): string {
+  const shortId = encodeURIComponent(getShortBookShareId(book));
+  if (
+    typeof window === 'undefined' ||
+    !window.location?.origin ||
+    window.location.origin === 'null'
+  ) {
+    return `/?book=${shortId}`;
   }
-
-  return buildBookShareUrl(book);
+  return `${window.location.origin}/?book=${shortId}`;
 }
 
 export function getSharedBookIdFromUrl(): string | null {

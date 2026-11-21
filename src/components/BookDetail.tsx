@@ -4,7 +4,6 @@ import {
   formatBookMarkdown,
   formatBookShareSnippet,
   buildBookShareUrl,
-  resolvePublicBookShareUrl,
   copyTextToClipboard,
   ShareSnippetFormat,
   getBookCoverDesign,
@@ -67,15 +66,14 @@ export const BookDetail: React.FC<BookDetailProps> = ({
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [showMoreActions, setShowMoreActions] = useState(false);
 
-  // Share snippet modal state
+  // Share snippet & direct link state
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [shareFormat, setShareFormat] = useState<ShareSnippetFormat>('social');
-  const [shareUrl, setShareUrl] = useState<string>('');
-  const [isResolvingShareUrl, setIsResolvingShareUrl] = useState(false);
   const [isEditingSnippet, setIsEditingSnippet] = useState(false);
   const [shareSnippetText, setShareSnippetText] = useState('');
   const [shareCopied, setShareCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [directLinkCopied, setDirectLinkCopied] = useState(false);
 
   // Clean expandable sections
   const [expandedParts, setExpandedParts] = useState<Record<number, boolean>>({ 1: true });
@@ -103,6 +101,7 @@ export const BookDetail: React.FC<BookDetailProps> = ({
     setIsEditingSnippet(false);
     setShareCopied(false);
     setLinkCopied(false);
+    setDirectLinkCopied(false);
   }, [book.id]);
 
   useEffect(() => {
@@ -162,37 +161,30 @@ export const BookDetail: React.FC<BookDetailProps> = ({
     }
   };
 
-  const fallbackShareUrl = useMemo(() => buildBookShareUrl(book), [book]);
+  const shareUrl = useMemo(() => buildBookShareUrl(book), [book]);
 
-  const handleOpenShare = async () => {
+  const handleCopyDirectLink = async () => {
+    const ok = await copyTextToClipboard(shareUrl);
+    if (ok) {
+      setDirectLinkCopied(true);
+      setTimeout(() => setDirectLinkCopied(false), 2200);
+    }
+  };
+
+  const handleOpenShare = () => {
     const initialFormat: ShareSnippetFormat = 'social';
     setShareFormat(initialFormat);
-    setShareUrl(fallbackShareUrl);
-    setShareSnippetText(formatBookShareSnippet(book, initialFormat, fallbackShareUrl));
+    setShareSnippetText(formatBookShareSnippet(book, initialFormat, shareUrl));
     setShareCopied(false);
     setLinkCopied(false);
     setIsEditingSnippet(false);
     setShowMoreActions(false);
     setIsShareOpen(true);
-    setIsResolvingShareUrl(true);
-
-    const activeBookId = book.id;
-    const shortUrl = await resolvePublicBookShareUrl(book);
-    setIsResolvingShareUrl(false);
-
-    if (activeBookId === book.id) {
-      setShareUrl(shortUrl);
-      setShareSnippetText((prev) =>
-        prev.includes(fallbackShareUrl)
-          ? prev.replace(fallbackShareUrl, shortUrl)
-          : formatBookShareSnippet(book, initialFormat, shortUrl)
-      );
-    }
   };
 
   const handleSwitchShareFormat = (nextFormat: ShareSnippetFormat) => {
     setShareFormat(nextFormat);
-    setShareSnippetText(formatBookShareSnippet(book, nextFormat, shareUrl || fallbackShareUrl));
+    setShareSnippetText(formatBookShareSnippet(book, nextFormat, shareUrl));
     setShareCopied(false);
   };
 
@@ -205,7 +197,7 @@ export const BookDetail: React.FC<BookDetailProps> = ({
   };
 
   const handleCopyShareLink = async () => {
-    const ok = await copyTextToClipboard(shareUrl || fallbackShareUrl);
+    const ok = await copyTextToClipboard(shareUrl);
     if (ok) {
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2200);
@@ -213,13 +205,12 @@ export const BookDetail: React.FC<BookDetailProps> = ({
   };
 
   const handleNativeShare = async () => {
-    const activeUrl = shareUrl || fallbackShareUrl;
     if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
       try {
         await navigator.share({
           title: `${book.title} — Book Summary`,
           text: shareSnippetText,
-          url: activeUrl,
+          url: shareUrl,
         });
         return;
       } catch (err) {
@@ -429,6 +420,25 @@ export const BookDetail: React.FC<BookDetailProps> = ({
               }`}
             />
             <span>{isRead ? 'Completed' : 'Mark Read'}</span>
+          </button>
+
+          {/* Copy Direct App Link */}
+          <button
+            type="button"
+            onClick={handleCopyDirectLink}
+            className={`min-h-[40px] flex items-center gap-1.5 px-3.5 rounded-xl text-[13px] font-medium border transition-all cursor-pointer ${
+              directLinkCopied
+                ? `${theme.greenBg} ${theme.greenText} ${theme.greenBorder}`
+                : `${theme.surfaceBg} ${theme.hoverBg} ${theme.textPrimary} ${theme.border}`
+            }`}
+            title="Copy direct shareable link to this book summary"
+          >
+            {directLinkCopied ? (
+              <Check className={`w-4 h-4 ${theme.greenText} stroke-[2.5]`} />
+            ) : (
+              <Link2 className={`w-4 h-4 ${theme.accentText}`} />
+            )}
+            <span>{directLinkCopied ? 'Link Copied' : 'Copy Link'}</span>
           </button>
 
           {/* Share Insights Snippet */}
@@ -961,29 +971,21 @@ export const BookDetail: React.FC<BookDetailProps> = ({
             <div className="p-5 space-y-4 overflow-y-auto">
               {/* Direct Shareable Summary Link */}
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className={`text-xs font-medium ${theme.textSecondary}`}>
-                    Summary link
-                  </span>
-                  {isResolvingShareUrl && (
-                    <span className={`inline-flex items-center gap-1 text-[11px] ${theme.accentText}`}>
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                      <span>Generating short link...</span>
-                    </span>
-                  )}
-                </div>
+                <span className={`text-xs font-medium block ${theme.textSecondary}`}>
+                  Summary link
+                </span>
                 <div className={`flex items-center gap-2 p-1.5 pl-3 rounded-xl border ${theme.subtleBg} ${theme.border}`}>
                   <Link2 className={`w-3.5 h-3.5 flex-shrink-0 ${theme.accentText}`} />
                   <a
-                    href={shareUrl || fallbackShareUrl}
+                    href={shareUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`flex-1 min-w-0 truncate text-xs font-mono-code underline underline-offset-2 hover:opacity-80 ${theme.accentText}`}
                   >
-                    {shareUrl || fallbackShareUrl}
+                    {shareUrl}
                   </a>
                   <a
-                    href={shareUrl || fallbackShareUrl}
+                    href={shareUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     title="Open summary in browser"

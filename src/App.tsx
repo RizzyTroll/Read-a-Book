@@ -21,7 +21,7 @@ import {
   mergeLibraries,
   normalizeTitle,
 } from './utils/libraryStorage';
-import { getSharedBookIdFromUrl } from './utils/formatters';
+import { getSharedBookIdFromUrl, getShortBookShareId } from './utils/formatters';
 import { addBooksOnClientViaFreeApis } from './utils/freeBookApi';
 import {
   DAILY_BOOK_ADD_LIMIT,
@@ -63,21 +63,29 @@ const GENERIC_ADD_BOOK_ERROR = 'Failed to add the book. Please try again.';
 function findBookByShareParam(books: Book[], shareParam: string): Book | undefined {
   const trimmed = shareParam.trim();
   if (!trimmed) return undefined;
-  const targetNorm = normalizeTitle(trimmed);
-  return books.find(
-    (b) =>
-      b.id === trimmed ||
-      b.id.toLowerCase() === trimmed.toLowerCase() ||
-      (targetNorm && normalizeTitle(b.title) === targetNorm)
+
+  const exactIdMatch = books.find(
+    (b) => b.id === trimmed || b.id.toLowerCase() === trimmed.toLowerCase()
   );
+  if (exactIdMatch) return exactIdMatch;
+
+  if (/^\d+$/.test(trimmed)) {
+    const dayNum = Number(trimmed);
+    const dayMatch = books.find((b) => b.day === dayNum);
+    if (dayMatch) return dayMatch;
+  }
+
+  const targetNorm = normalizeTitle(trimmed);
+  if (!targetNorm) return undefined;
+  return books.find((b) => normalizeTitle(b.title) === targetNorm);
 }
 
-function updateBookUrlParam(bookId: string | null): void {
+function updateBookUrlParam(book: Pick<Book, 'id' | 'day'> | null): void {
   if (typeof window === 'undefined') return;
   try {
     const url = new URL(window.location.href);
-    if (bookId) {
-      url.searchParams.set('book', bookId);
+    if (book) {
+      url.searchParams.set('book', getShortBookShareId(book));
     } else {
       url.searchParams.delete('book');
     }
@@ -429,7 +437,7 @@ export default function App() {
     setSelectedBookId(book.id);
     setIsSummaryExpanded(true);
     setIsPreviewOpen(false);
-    updateBookUrlParam(book.id);
+    updateBookUrlParam(book);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
